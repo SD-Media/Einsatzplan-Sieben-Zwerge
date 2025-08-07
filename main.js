@@ -42,7 +42,32 @@ function addEinsatz() {
     });
 }
 
-
+function ladeEinsaetze() {
+    fetch(SCRIPT_URL + '?action=getData')
+        .then(res => res.text())
+        .then(text => {
+            console.log("RAW Antwort:", text);
+            let daten;
+            try {
+                const parsed = JSON.parse(text);
+                daten = parsed.data || parsed;
+                if (!Array.isArray(daten)) {
+                    throw new Error("Erwartetes Array nicht gefunden");
+                }
+            } catch (e) {
+                console.error("JSON Fehler:", e);
+                document.getElementById('alleEinsaetze').innerText = 'Fehler beim Laden der Daten.';
+                document.getElementById('parentOverview').innerText = 'Fehler beim Laden der Elternübersicht.';
+                return;
+            }
+            zeigeEinsaetze(daten);
+            zeigeEltern(daten);
+        })
+        .catch(err => {
+            console.error("Fetch Fehler:", err);
+            document.getElementById('alleEinsaetze').innerText = 'Verbindung zum Server fehlgeschlagen.';
+        });
+}
 
 function zeigeEinsaetze(daten) {
     const bereich = document.getElementById('alleEinsaetze');
@@ -94,8 +119,20 @@ function zeigeEigeneEinsaetze() {
     if (!name) return;
 
     fetch(SCRIPT_URL + '?action=getData')
-        .then(res => res.json())
-        .then(daten => {
+        .then(res => res.text())
+        .then(text => {
+            let daten;
+            try {
+                const parsed = JSON.parse(text);
+                daten = parsed.data || parsed;
+                if (!Array.isArray(daten)) {
+                    throw new Error("Erwartetes Array nicht gefunden");
+                }
+            } catch (e) {
+                console.error("Fehler bei Eigeneinsätzen:", e);
+                return;
+            }
+
             const eigene = daten.filter(e => e.helfer?.split(',').map(h => h.trim()).includes(name));
             const bereich = document.getElementById('eigeneEinsaetze');
             bereich.innerHTML = '';
