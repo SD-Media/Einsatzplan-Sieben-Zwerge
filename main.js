@@ -1,4 +1,4 @@
-// main.js – vollständig überarbeitet mit Farbfixes, Punktausgabe und Druckkorrektur
+// main.js – Farbzuordnung per Map + Fallback Helferanzahl
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 const ADMIN_PASSWORT = 'SiebenZwerge';
 
@@ -6,7 +6,14 @@ let globaleDaten = [];
 let globaleSollPunkte = 10;
 let eigeneEinsaetzeGedruckt = false;
 
-// Tabs anzeigen
+const kategorieFarbeMap = {
+  Gartenarbeit: 'gartenarbeit',
+  Verkaufsaktion: 'verkaufsaktion',
+  Feste: 'feste',
+  Kindergartenpflege: 'kindergartenpflege',
+  Sonstiges: 'sonstiges'
+};
+
 function showTab(id, event) {
   document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -88,7 +95,7 @@ function zeigeEigeneEinsaetze() {
   let punkte = 0;
   eigene.forEach(e => {
     punkte += Number(e.Punkte || 0);
-    const farbe = e.Einsatzkategorie?.toLowerCase().replace(/\s+/g, '') || 'grau';
+    const farbe = kategorieFarbeMap[e.Einsatzkategorie] || 'grau';
     const div = document.createElement('div');
     div.className = `einsatz-box einsatz-${farbe}`;
     div.innerHTML = `
@@ -124,7 +131,7 @@ function zeigeAlleEinsaetze(daten) {
 
   daten.forEach(e => {
     const div = document.createElement('div');
-    const farbe = e.Einsatzkategorie?.toLowerCase().replace(/\s+/g, '') || 'grau';
+    const farbe = kategorieFarbeMap[e.Einsatzkategorie] || 'grau';
     div.className = `einsatz-box einsatz-${farbe}`;
     div.innerHTML = `
       <strong>${e.Arbeitseinsatz}</strong><br>
@@ -134,7 +141,9 @@ function zeigeAlleEinsaetze(daten) {
       Punkte: ${e.Punkte || '0'}<br>
     `;
 
-    const helferanzahl = parseInt(e.Helferanzahl || 0);
+    let helferanzahl = parseInt(e.Helferanzahl);
+    if (isNaN(helferanzahl)) helferanzahl = 3;
+
     for (let i = 0; i < helferanzahl; i++) {
       const input = document.createElement('input');
       input.className = 'helfer-input';
