@@ -1,4 +1,4 @@
-// main.js – Farbzuordnung per Map + Fallback Helferanzahl
+// main.js – final überarbeitet: Farbanzeige, Helferfelder, Adminübersicht, Druckansicht
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 const ADMIN_PASSWORT = 'SiebenZwerge';
 
@@ -96,6 +96,15 @@ function zeigeEigeneEinsaetze() {
   eigene.forEach(e => {
     punkte += Number(e.Punkte || 0);
     const farbe = kategorieFarbeMap[e.Einsatzkategorie] || 'grau';
+
+    let helferanzahl = parseInt(e.Helferanzahl);
+    if (isNaN(helferanzahl)) helferanzahl = 0;
+
+    let belegt = 0;
+    for (let i = 0; i < helferanzahl; i++) {
+      if (e[`Helfer${i+1}`]) belegt++;
+    }
+
     const div = document.createElement('div');
     div.className = `einsatz-box einsatz-${farbe}`;
     div.innerHTML = `
@@ -103,7 +112,8 @@ function zeigeEigeneEinsaetze() {
       ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
       Verantwortlich: ${e.Verantwortliche || '-'}<br>
       Kategorie: ${e.Einsatzkategorie || '-'}<br>
-      Punkte: ${e.Punkte || '0'}
+      Punkte: ${e.Punkte || '0'}<br>
+      Helfer: ${belegt} / ${helferanzahl}
     `;
     bereich.appendChild(div);
   });
@@ -115,13 +125,7 @@ function zeigeEigeneEinsaetze() {
   const druckBtn = document.createElement('button');
   druckBtn.textContent = 'Diese Ansicht drucken';
   druckBtn.className = 'btn btn-print';
-  druckBtn.onclick = () => {
-    if (!eigeneEinsaetzeGedruckt) {
-      alert('Bitte zuerst Ihre Einsätze anzeigen.');
-      return;
-    }
-    window.print();
-  };
+  druckBtn.onclick = () => window.print();
   bereich.appendChild(druckBtn);
 }
 
@@ -130,8 +134,17 @@ function zeigeAlleEinsaetze(daten) {
   container.innerHTML = '';
 
   daten.forEach(e => {
-    const div = document.createElement('div');
     const farbe = kategorieFarbeMap[e.Einsatzkategorie] || 'grau';
+
+    let helferanzahl = parseInt(e.Helferanzahl);
+    if (isNaN(helferanzahl)) helferanzahl = 0;
+
+    let belegt = 0;
+    for (let i = 0; i < helferanzahl; i++) {
+      if (e[`Helfer${i+1}`]) belegt++;
+    }
+
+    const div = document.createElement('div');
     div.className = `einsatz-box einsatz-${farbe}`;
     div.innerHTML = `
       <strong>${e.Arbeitseinsatz}</strong><br>
@@ -139,10 +152,8 @@ function zeigeAlleEinsaetze(daten) {
       Verantwortlich: ${e.Verantwortliche || ''}<br>
       Kategorie: ${e.Einsatzkategorie || ''}<br>
       Punkte: ${e.Punkte || '0'}<br>
+      Helfer: ${belegt} / ${helferanzahl}<br>
     `;
-
-    let helferanzahl = parseInt(e.Helferanzahl);
-    if (isNaN(helferanzahl)) helferanzahl = 3;
 
     for (let i = 0; i < helferanzahl; i++) {
       const input = document.createElement('input');
@@ -159,6 +170,50 @@ function zeigeAlleEinsaetze(daten) {
 
     container.appendChild(div);
   });
+}
+
+function zeigeAdminEinsaetze(daten) {
+  const bereich = document.getElementById('adminEinsaetze');
+  bereich.innerHTML = '';
+
+  daten.forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'einsatz-box';
+    div.innerHTML = `
+      <strong>${e.Arbeitseinsatz}</strong><br>
+      ${e.Datum || ''} – ${e.Einsatzzeit || ''}<br>
+      Kategorie: ${e.Einsatzkategorie || ''}<br>
+      Punkte: ${e.Punkte || '0'}<br>
+      Helferanzahl: ${e.Helferanzahl || '0'}<br>
+      <button onclick="bearbeiteEinsatz('${e.ID}')">Bearbeiten</button>
+      <button onclick="loescheEinsatz('${e.ID}')">Löschen</button>
+    `;
+    bereich.appendChild(div);
+  });
+}
+
+function bearbeiteEinsatz(id) {
+  const e = globaleDaten.find(d => d.ID == id);
+  if (!e) return;
+
+  document.getElementById('bearbeitenID').value = e.ID;
+  document.getElementById('bearbeitenTitel').value = e.Arbeitseinsatz;
+  document.getElementById('bearbeitenDatum').value = e.Datum;
+  document.getElementById('bearbeitenUhrzeit').value = e.Einsatzzeit;
+  document.getElementById('bearbeitenVerantwortlich').value = e.Verantwortliche;
+  document.getElementById('bearbeitenKategorie').value = e.Einsatzkategorie;
+  document.getElementById('bearbeitenPunkte').value = e.Punkte;
+  document.getElementById('bearbeitenHelferanzahl').value = e.Helferanzahl;
+  document.getElementById('bearbeitenModal').style.display = 'flex';
+}
+
+function loescheEinsatz(id) {
+  if (!confirm("Einsatz wirklich löschen?")) return;
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'deleteEinsatz', id, adminPassword: ADMIN_PASSWORT }),
+    headers: { 'Content-Type': 'application/json' }
+  }).then(() => ladeEinsaetze());
 }
 
 function setHelfer(id, index, name) {
@@ -199,10 +254,6 @@ function resetAlleHelfer() {
     body: JSON.stringify({ action: 'removeAllHelfer', adminPassword: ADMIN_PASSWORT }),
     headers: { 'Content-Type': 'application/json' }
   }).then(() => ladeEinsaetze());
-}
-
-function zeigeAdminEinsaetze(daten) {
-  // Optional nachreichen falls gewünscht
 }
 
 function speichereBearbeitung() {
