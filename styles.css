@@ -55,7 +55,8 @@ ul {
 }
 
 .name-input,
-.password-input {
+.password-input,
+.form-input {
     width: 100%;
     padding: 10px;
     margin: 10px 0;
@@ -83,7 +84,24 @@ ul {
     background-color: #3a78c2;
 }
 
-.loading {
-    font-style: italic;
-    color: #777;
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
 }
