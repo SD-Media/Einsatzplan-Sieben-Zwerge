@@ -1,4 +1,4 @@
-// main.js – final überarbeitet: Farbanzeige, Helferfelder, Adminübersicht, Druckansicht
+// main.js – Fehlerbehebung: Speicherung, Admin-Ansicht, Elternübersicht, Druckfunktion
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 const ADMIN_PASSWORT = 'SiebenZwerge';
 
@@ -37,6 +37,7 @@ function loginAdmin() {
   const eingabe = document.getElementById('adminPasswort').value;
   if (eingabe === ADMIN_PASSWORT) {
     document.getElementById('adminArea').style.display = 'block';
+    zeigeAdminEinsaetze(globaleDaten);
   } else {
     alert('Falsches Passwort');
   }
@@ -50,7 +51,9 @@ function ladeEinsaetze() {
       globaleSollPunkte = json.sollPunkte;
       zeigeElternUebersicht(globaleDaten);
       zeigeAlleEinsaetze(globaleDaten);
-      zeigeAdminEinsaetze(globaleDaten);
+      if (document.getElementById('adminArea').style.display === 'block') {
+        zeigeAdminEinsaetze(globaleDaten);
+      }
     });
 }
 
@@ -96,15 +99,12 @@ function zeigeEigeneEinsaetze() {
   eigene.forEach(e => {
     punkte += Number(e.Punkte || 0);
     const farbe = kategorieFarbeMap[e.Einsatzkategorie] || 'grau';
-
     let helferanzahl = parseInt(e.Helferanzahl);
     if (isNaN(helferanzahl)) helferanzahl = 0;
-
     let belegt = 0;
     for (let i = 0; i < helferanzahl; i++) {
       if (e[`Helfer${i+1}`]) belegt++;
     }
-
     const div = document.createElement('div');
     div.className = `einsatz-box einsatz-${farbe}`;
     div.innerHTML = `
@@ -135,15 +135,12 @@ function zeigeAlleEinsaetze(daten) {
 
   daten.forEach(e => {
     const farbe = kategorieFarbeMap[e.Einsatzkategorie] || 'grau';
-
     let helferanzahl = parseInt(e.Helferanzahl);
     if (isNaN(helferanzahl)) helferanzahl = 0;
-
     let belegt = 0;
     for (let i = 0; i < helferanzahl; i++) {
       if (e[`Helfer${i+1}`]) belegt++;
     }
-
     const div = document.createElement('div');
     div.className = `einsatz-box einsatz-${farbe}`;
     div.innerHTML = `
@@ -154,20 +151,20 @@ function zeigeAlleEinsaetze(daten) {
       Punkte: ${e.Punkte || '0'}<br>
       Helfer: ${belegt} / ${helferanzahl}<br>
     `;
-
     for (let i = 0; i < helferanzahl; i++) {
       const input = document.createElement('input');
       input.className = 'helfer-input';
       input.placeholder = 'Name eintragen...';
       input.value = e[`Helfer${i+1}`] || '';
-      input.onchange = () => setHelfer(e.ID, i, input.value);
+      input.onchange = () => {
+        setHelfer(e.ID, i, input.value);
+      };
       if (input.value.trim()) input.classList.add('filled');
       input.addEventListener('input', () => {
         input.classList.toggle('filled', input.value.trim() !== '');
       });
       div.appendChild(input);
     }
-
     container.appendChild(div);
   });
 }
@@ -195,7 +192,6 @@ function zeigeAdminEinsaetze(daten) {
 function bearbeiteEinsatz(id) {
   const e = globaleDaten.find(d => d.ID == id);
   if (!e) return;
-
   document.getElementById('bearbeitenID').value = e.ID;
   document.getElementById('bearbeitenTitel').value = e.Arbeitseinsatz;
   document.getElementById('bearbeitenDatum').value = e.Datum;
@@ -236,7 +232,6 @@ function addEinsatz() {
     punkte: Number(document.getElementById('einsatzStunden').value),
     helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value)
   };
-
   fetch(SCRIPT_URL, {
     method: 'POST',
     body: JSON.stringify(daten),
@@ -269,7 +264,6 @@ function speichereBearbeitung() {
     punkte: document.getElementById('bearbeitenPunkte').value,
     helferanzahl: document.getElementById('bearbeitenHelferanzahl').value
   };
-
   fetch(SCRIPT_URL, {
     method: 'POST',
     body: JSON.stringify(daten),
