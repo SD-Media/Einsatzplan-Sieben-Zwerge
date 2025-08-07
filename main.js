@@ -1,9 +1,11 @@
+// --- EINSTELLUNGEN UND VARIABLEN ---
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 const ADMIN_PASSWORT = 'SiebenZwerge';
 
 let globaleDaten = [];
 let globaleSollPunkte = 10;
 
+// --- SEITENNAVIGATION ---
 function showTab(id, event) {
   document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -11,10 +13,15 @@ function showTab(id, event) {
   event.target.classList.add('active');
 }
 
+// --- PASSWORTFELD UMSCHALTEN UND ENTER-LOGIN ---
 function togglePasswort() {
   const input = document.getElementById('adminPasswort');
   input.type = input.type === 'password' ? 'text' : 'password';
 }
+
+document.getElementById('adminPasswort').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') loginAdmin();
+});
 
 function loginAdmin() {
   const eingabe = document.getElementById('adminPasswort').value;
@@ -25,6 +32,7 @@ function loginAdmin() {
   }
 }
 
+// --- EINTRAG HINZUFÜGEN ---
 function addEinsatz() {
   const daten = {
     action: 'addEinsatz',
@@ -42,9 +50,13 @@ function addEinsatz() {
     method: 'POST',
     body: JSON.stringify(daten),
     headers: { 'Content-Type': 'application/json' }
-  }).then(() => ladeEinsaetze());
+  }).then(() => {
+    alert('Einsatz erfolgreich gespeichert.');
+    ladeEinsaetze();
+  });
 }
 
+// --- ALLE HELFER ZURÜCKSETZEN ---
 function resetAlleHelfer() {
   if (!confirm("Alle Helfereinträge wirklich löschen?")) return;
 
@@ -58,6 +70,7 @@ function resetAlleHelfer() {
   }).then(() => ladeEinsaetze());
 }
 
+// --- EINTRÄGE LADEN ---
 function ladeEinsaetze() {
   fetch(SCRIPT_URL)
     .then(res => res.json())
@@ -70,6 +83,7 @@ function ladeEinsaetze() {
     });
 }
 
+// --- ELTERNÜBERSICHT ---
 function zeigeElternUebersicht(daten) {
   const eltern = {};
   daten.forEach(e => {
@@ -97,6 +111,7 @@ function zeigeElternUebersicht(daten) {
     });
 }
 
+// --- EIGENE EINTRÄGE ZEIGEN ---
 function zeigeEigeneEinsaetze() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) return;
@@ -126,8 +141,15 @@ function zeigeEigeneEinsaetze() {
   const summary = document.createElement('div');
   summary.innerHTML = `<strong>Gesammelte Punkte: ${punkte} / ${globaleSollPunkte} (Differenz: ${punkte - globaleSollPunkte})</strong>`;
   bereich.prepend(summary);
+
+  const druckBtn = document.createElement('button');
+  druckBtn.textContent = 'Diese Ansicht drucken';
+  druckBtn.className = 'btn btn-print';
+  druckBtn.onclick = () => window.print();
+  bereich.appendChild(druckBtn);
 }
 
+// --- ALLE EINTRÄGE ANZEIGEN ---
 function zeigeAlleEinsaetze(daten) {
   const bereich = document.getElementById('einsatzListe');
   bereich.innerHTML = '';
@@ -194,6 +216,7 @@ function zeigeAlleEinsaetze(daten) {
   });
 }
 
+// --- ADMIN-EINTRÄGE ANZEIGEN UND BEARBEITEN ---
 function zeigeAdminEinsaetze(daten) {
   const bereich = document.getElementById('adminEinsaetze');
   bereich.innerHTML = '';
@@ -272,4 +295,5 @@ function speichereBearbeitung() {
   });
 }
 
+// --- INIT ---
 document.addEventListener('DOMContentLoaded', ladeEinsaetze);
