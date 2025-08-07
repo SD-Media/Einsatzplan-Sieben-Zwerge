@@ -12,7 +12,7 @@ function showTab(id, event) {
     event.target.classList.add('active');
 }
 
-function togglePasswort() {
+function togglePassword() {
     const feld = document.getElementById('adminPasswort');
     feld.type = feld.type === 'password' ? 'text' : 'password';
 }
@@ -24,6 +24,131 @@ function loginAdmin() {
     } else {
         alert('Falsches Passwort');
     }
+}
+
+function ladeEinsaetze() {
+    fetch(SCRIPT_URL)
+        .then(res => res.json())
+        .then(json => {
+            globaleDaten = json.data;
+            globaleSollPunkte = json.sollPunkte;
+            zeigeEinsaetze();
+            zeigeElternUebersicht();
+            zeigeAdminEinsaetze();
+        });
+}
+
+function zeigeEinsaetze() {
+    const container = document.getElementById('einsatzUebersicht');
+    container.innerHTML = '';
+
+    globaleDaten.forEach(e => {
+        const box = document.createElement('div');
+        box.className = `einsatz-box ${e.kategorie.toLowerCase()}`;
+        box.innerHTML = `
+            <b>${e.name}</b><br>
+            ${e.datum} – ${e.uhrzeit}<br>
+            Verantwortlich: ${e.verantwortlich}<br>
+            Kategorie: ${e.kategorie}<br>
+            Helfer: ${e.helferanzahl}<br>
+        `;
+
+        for (let i = 0; i < e.helferanzahl; i++) {
+            const input = document.createElement('input');
+            input.className = 'helfer-eintrag';
+            input.value = e.helfer[i] || '';
+            input.dataset.id = e.id;
+            input.dataset.index = i;
+            input.style.marginRight = '10px';
+            if (input.value.trim()) input.classList.add('besetzt');
+            else input.classList.add('frei');
+            input.addEventListener('change', helferSpeichern);
+            box.appendChild(input);
+        }
+
+        container.appendChild(box);
+    });
+}
+
+function helferSpeichern(event) {
+    const input = event.target;
+    const id = input.dataset.id;
+    const index = parseInt(input.dataset.index);
+    const name = input.value.trim();
+
+    input.classList.toggle('besetzt', name !== '');
+    input.classList.toggle('frei', name === '');
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'setHelfer',
+            id: id,
+            index: index,
+            name: name,
+            adminPassword: ADMIN_PASSWORT
+        }),
+        headers: { 'Content-Type': 'application/json' }
+    }).then(() => ladeEinsaetze());
+}
+
+function zeigeElternUebersicht() {
+    const eltern = {};
+    globaleDaten.forEach(e => {
+        e.helfer.forEach(name => {
+            if (!name.trim()) return;
+            eltern[name] = (eltern[name] || 0) + e.punkte;
+        });
+    });
+
+    const table = document.getElementById('parentOverview');
+    table.innerHTML = Object.entries(eltern)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([name, ist]) => {
+            const soll = globaleSollPunkte;
+            const diff = ist - soll;
+            return `
+                <tr>
+                    <td>${name}</td>
+                    <td>${ist}</td>
+                    <td>${soll}</td>
+                    <td class="${diff >= 0 ? 'differenz-positiv' : 'differenz-negativ'}">${diff}</td>
+                </tr>
+            `;
+        }).join('');
+}
+
+function zeigeEigeneEinsaetze() {
+    const name = document.getElementById('suchName').value.trim();
+    if (!name) return;
+
+    const eigene = globaleDaten.filter(e => e.helfer.includes(name));
+    const punkte = eigene.reduce((sum, e) => sum + e.punkte, 0);
+
+    document.getElementById('eigenePunkteInfo').innerText =
+        `Gesammelte Punkte: ${punkte} / ${globaleSollPunkte} (Differenz: ${punkte - globaleSollPunkte})`;
+
+    const container = document.getElementById('eigeneEinsaetze');
+    container.innerHTML = eigene.map(e => `
+        <div class="einsatz-box ${e.kategorie.toLowerCase()}">
+            <b>${e.name}</b><br>
+            ${e.datum} – ${e.uhrzeit}<br>
+            Verantwortlich: ${e.verantwortlich}<br>
+            Kategorie: ${e.kategorie}
+        </div>
+    `).join('');
+}
+
+function druckeEinsaetze() {
+    const inhalt = document.getElementById('eigeneEinsaetze').innerHTML;
+    const stil = `<style>
+        body { font-family: sans-serif; padding: 20px; }
+        .einsatz-box { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; }
+    </style>`;
+    const w = window.open('', '', 'width=800,height=600');
+    w.document.write(`<html><head>${stil}</head><body>${inhalt}</body></html>`);
+    w.document.close();
+    w.print();
 }
 
 function addEinsatz() {
@@ -72,126 +197,10 @@ function deleteEinsatz(id) {
     }).then(() => ladeEinsaetze());
 }
 
-function resetAlleHelfer() {
-    if (!confirm("Alle Helfereinträge wirklich löschen?")) return;
-
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'removeAllHelfer',
-            adminPassword: ADMIN_PASSWORT
-        }),
-        headers: { 'Content-Type': 'application/json' }
-    }).then(() => ladeEinsaetze());
-}
-
-function ladeEinsaetze() {
-    fetch(SCRIPT_URL)
-        .then(res => res.json())
-        .then(json => {
-            globaleDaten = json.data;
-            globaleSollPunkte = json.sollPunkte;
-            zeigeElternUebersicht(globaleDaten);
-            zeigeAlleEinsaetze(globaleDaten);
-            zeigeAdminEinsaetze(globaleDaten);
-        });
-}
-
-function zeigeElternUebersicht(daten) {
-    const eltern = {};
-    daten.forEach(einsatz => {
-        einsatz.helfer.forEach(name => {
-            if (!name.trim()) return;
-            if (!eltern[name]) eltern[name] = 0;
-            eltern[name] += einsatz.punkte;
-        });
-    });
-
-    const sortedNamen = Object.keys(eltern).sort();
-    const table = document.getElementById('elternTabelle');
-    table.innerHTML = sortedNamen.map(name => {
-        const ist = eltern[name];
-        const soll = globaleSollPunkte;
-        const diff = ist - soll;
-        return `
-        <tr>
-            <td>${name}</td>
-            <td>${ist}</td>
-            <td>${soll}</td>
-            <td style="color: ${diff >= 0 ? 'green' : 'red'}">${diff}</td>
-        </tr>`;
-    }).join('');
-}
-
-function zeigeEigeneEinsaetze() {
-    const name = document.getElementById('suchName').value.trim();
-    if (!name) return;
-
-    const eigene = globaleDaten.filter(e => e.helfer.includes(name));
-    const punkte = eigene.reduce((sum, e) => sum + e.punkte, 0);
-
-    const gesamt = `Gesammelte Punkte: ${punkte} / ${globaleSollPunkte} (Differenz: ${punkte - globaleSollPunkte})`;
-    document.getElementById('eigenePunkteInfo').innerText = gesamt;
-
-    const container = document.getElementById('eigeneEinsaetze');
-    container.innerHTML = eigene.map(e => `
-        <div class="einsatz-box" style="border-left: 6px solid ${getKategorieFarbe(e.kategorie)}">
-            <b>${e.name}</b><br>
-            ${e.datum} – ${e.uhrzeit}<br>
-            Verantwortlich: ${e.verantwortlich || '-'}<br>
-            Kategorie: ${e.kategorie}
-        </div>
-    `).join('');
-}
-
-function zeigeAlleEinsaetze(daten = globaleDaten) {
-    const bereich = document.getElementById('einsatzBereich');
-    bereich.innerHTML = daten.map(e => {
-        const felder = Array(e.helferanzahl).fill('').map((_, i) => {
-            const name = e.helfer[i] || '';
-            const style = name ? 'background-color: #d4edda;' : '';
-            return `<input class="helfer-eintrag" data-id="${e.id}" data-index="${i}" value="${name}" style="${style}" />`;
-        }).join('');
-
-        return `
-        <div class="einsatz-box" style="border-left: 6px solid ${getKategorieFarbe(e.kategorie)}">
-            <b>${e.name}</b><br>
-            ${e.datum} – ${e.uhrzeit}<br>
-            Verantwortlich: ${e.verantwortlich || '-'}<br>
-            Kategorie: ${e.kategorie}<br>
-            Punkte: ${e.punkte} | Helfer: ${e.helferanzahl}<br>
-            ${felder}
-        </div>`;
-    }).join('');
-
-    // Event-Handler hinzufügen
-    document.querySelectorAll('.helfer-eintrag').forEach(input => {
-        input.addEventListener('change', () => {
-            const id = input.dataset.id;
-            const index = parseInt(input.dataset.index);
-            const name = input.value.trim();
-            if (name) input.style.backgroundColor = '#d4edda';
-            else input.style.backgroundColor = '';
-
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'setHelfer',
-                    id: id,
-                    index: index,
-                    name: name,
-                    adminPassword: ADMIN_PASSWORT
-                }),
-                headers: { 'Content-Type': 'application/json' }
-            }).then(() => ladeEinsaetze());
-        });
-    });
-}
-
-function zeigeAdminEinsaetze(daten = globaleDaten) {
-    const container = document.getElementById('adminEinsaetze');
-    container.innerHTML = daten.map(e => `
-        <div class="einsatz-box" style="border-left: 6px solid ${getKategorieFarbe(e.kategorie)}">
+function zeigeAdminEinsaetze() {
+    const container = document.getElementById('alleEinsaetze');
+    container.innerHTML = globaleDaten.map(e => `
+        <div class="einsatz-box ${e.kategorie.toLowerCase()}">
             <b>${e.name}</b><br>
             ${e.datum} – ${e.uhrzeit}<br>
             Kategorie: ${e.kategorie}<br>
@@ -216,26 +225,4 @@ function bearbeitenEinsatz(id) {
     document.getElementById('einsatzHelferanzahl').value = e.helferanzahl;
 }
 
-function getKategorieFarbe(kategorie) {
-    switch (kategorie) {
-        case 'Gartenarbeit': return '#4CAF50';
-        case 'Verkaufsaktion': return '#FF9800';
-        case 'Feste': return '#9C27B0';
-        case 'Kindergartenpflege': return '#2196F3';
-        case 'Sonstiges': return '#607D8B';
-        default: return '#000';
-    }
-}
-
-function druckeEinsaetze() {
-    const inhalt = document.getElementById('eigeneEinsaetze').innerHTML;
-    const stil = `<style>
-        body { font-family: sans-serif; padding: 20px; }
-        .einsatz-box { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; }
-    </style>`;
-
-    const w = window.open('', '', 'width=800,height=600');
-    w.document.write(`<html><head>${stil}</head><body>${inhalt}</body></html>`);
-    w.document.close();
-    w.print();
-}
+window.addEventListener('DOMContentLoaded', ladeEinsaetze);
