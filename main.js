@@ -1,7 +1,7 @@
 // main.js
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
-const ADMIN_PASSWORT = 'admin123';
+const ADMIN_PASSWORT = 'SiebenZwerge';
 
 function showTab(id, event) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
