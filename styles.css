@@ -1,3 +1,4 @@
+/* Grundlayout */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -15,11 +16,7 @@ body {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
+/* Tabs */
 .nav-tabs {
     display: flex;
     justify-content: center;
@@ -49,25 +46,49 @@ h1 {
     display: block;
 }
 
-ul {
-    list-style: disc;
-    padding-left: 20px;
+/* Kategorienfarben */
+.kategorien {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
-.name-input,
-.password-input,
-.form-input {
+.kategorie {
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: bold;
+    min-width: 150px;
+    text-align: center;
+}
+
+.garten { background: #4caf50; }
+.verkauf { background: #ff9800; }
+.feste { background: #9c27b0; }
+.pflege { background: #2196f3; }
+.sonstiges { background: #607d8b; }
+
+/* Formularfelder */
+input[type=\"text\"], input[type=\"password\"], input[type=\"date\"], input[type=\"time\"], input[type=\"number\"] {
     width: 100%;
     padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
+    margin: 8px 0;
     border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
     font-size: 1rem;
 }
 
+.form-input {
+    display: block;
+}
+
+/* Buttons */
 .btn {
     padding: 10px 20px;
-    margin-top: 5px;
+    margin: 10px 5px 20px 0;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -85,23 +106,54 @@ ul {
 }
 
 .btn-success {
-    background-color: #28a745;
+    background-color: #4caf50;
     color: white;
 }
 
-.btn-delete {
-    background-color: #dc3545;
+.btn-success:hover {
+    background-color: #3e8e41;
+}
+
+.btn-print {
+    background-color: #607d8b;
     color: white;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
+.btn-print:hover {
+    background-color: #455a64;
 }
 
-th, td {
+/* Elternübersicht / Einsätze */
+#parentOverview, #alleEinsaetze, #eigeneEinsaetze {
+    margin-top: 20px;
+}
+
+.einsatz-box {
     border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
+    border-left: 5px solid #4a90e2;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+
+.einsatz-box.helfer-voll {
+    border-left-color: #4caf50;
+    background: #e8f5e9;
+}
+
+.einsatz-box.helfer-fehlt {
+    border-left-color: #f44336;
+    background: #ffebee;
+}
+
+.punkte {
+    font-weight: bold;
+    display: flex;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.punkte .diff {
+    font-style: italic;
 }
