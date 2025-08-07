@@ -19,8 +19,11 @@ function togglePasswort() {
   input.type = input.type === 'password' ? 'text' : 'password';
 }
 
-document.getElementById('adminPasswort').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') loginAdmin();
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('adminPasswort').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') loginAdmin();
+  });
+  ladeEinsaetze();
 });
 
 function loginAdmin() {
@@ -147,152 +150,6 @@ function zeigeEigeneEinsaetze() {
   druckBtn.className = 'btn btn-print';
   druckBtn.onclick = () => window.print();
   bereich.appendChild(druckBtn);
-}
-
-// --- ALLE EINTRÄGE ANZEIGEN ---
-function zeigeAlleEinsaetze(daten) {
-  const bereich = document.getElementById('einsatzListe');
-  bereich.innerHTML = '';
-  daten.forEach(e => {
-    const farbe = e.Einsatzkategorie?.toLowerCase().replace(/\s+/g, '');
-    const div = document.createElement('div');
-    div.className = `einsatz-box einsatz-${farbe}`;
-    div.innerHTML = `
-      <strong>${e.Arbeitseinsatz}</strong><br>
-      ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
-      Kategorie: ${e.Einsatzkategorie || '-'}<br>
-      Verantwortlich: ${e.Verantwortliche || '-'}<br>
-      Punkte: ${e.Punkte || 0} | Helfer: ${e['Benötigte Helfer'] || 0}
-    `;
-
-    const einsatzId = e.ID;
-    if (!einsatzId) {
-      console.warn('Kein Einsatz-ID gefunden:', e);
-      return;
-    }
-
-    for (let i = 1; i <= 10; i++) {
-      const feld = 'Helfer' + i;
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.value = e[feld] || '';
-      input.placeholder = 'Name eintragen...';
-      input.className = input.value ? 'helfer-input filled' : 'helfer-input';
-      input.dataset.id = einsatzId;
-      input.dataset.index = i - 1;
-
-      const status = document.createElement('span');
-      status.style.marginLeft = '10px';
-      status.style.color = '#4caf50';
-      status.style.fontWeight = 'bold';
-      status.style.display = 'none';
-      div.appendChild(status);
-
-      input.addEventListener('change', () => {
-        const neuerName = input.value.trim();
-        input.classList.toggle('filled', !!neuerName);
-
-        fetch(SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'setHelfer',
-            id: einsatzId,
-            index: Number(input.dataset.index),
-            name: neuerName
-          }),
-          headers: { 'Content-Type': 'application/json' }
-        }).then(() => {
-          status.textContent = '✔ Gespeichert';
-          status.style.display = 'inline';
-          setTimeout(() => status.style.display = 'none', 2000);
-          ladeEinsaetze();
-        });
-      });
-
-      div.appendChild(input);
-    }
-
-    bereich.appendChild(div);
-  });
-}
-
-// --- ADMIN-EINTRÄGE ANZEIGEN UND BEARBEITEN ---
-function zeigeAdminEinsaetze(daten) {
-  const bereich = document.getElementById('adminEinsaetze');
-  bereich.innerHTML = '';
-  daten.forEach(e => {
-    const farbe = e.Einsatzkategorie?.toLowerCase().replace(/\s+/g, '');
-    const div = document.createElement('div');
-    div.className = `einsatz-box einsatz-${farbe}`;
-    div.innerHTML = `
-      <strong>${e.Arbeitseinsatz}</strong><br>
-      ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
-      Kategorie: ${e.Einsatzkategorie || '-'}<br>
-      Verantwortlich: ${e.Verantwortliche || '-'}<br>
-      Punkte: ${e.Punkte || 0} | Helfer: ${e['Benötigte Helfer'] || 0}
-      <br><br>
-      <button class="btn btn-primary">Bearbeiten</button>
-      <button class="btn btn-danger">Löschen</button>
-    `;
-
-    // Löschen
-    div.querySelector('.btn-danger').addEventListener('click', () => {
-      if (confirm('Einsatz wirklich löschen?')) {
-        fetch(SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'deleteEinsatz',
-            adminPassword: ADMIN_PASSWORT,
-            id: e.ID
-          }),
-          headers: { 'Content-Type': 'application/json' }
-        }).then(() => ladeEinsaetze());
-      }
-    });
-
-    // Bearbeiten
-    div.querySelector('.btn-primary').addEventListener('click', () => {
-      document.getElementById('bearbeitenID').value = e.ID;
-      document.getElementById('bearbeitenTitel').value = e.Arbeitseinsatz;
-      document.getElementById('bearbeitenDatum').value = e.Datum;
-      document.getElementById('bearbeitenUhrzeit').value = e.Einsatzzeit;
-      document.getElementById('bearbeitenVerantwortlich').value = e.Verantwortliche;
-      document.getElementById('bearbeitenKategorie').value = e.Einsatzkategorie;
-      document.getElementById('bearbeitenPunkte').value = e.Punkte;
-      document.getElementById('bearbeitenHelferanzahl').value = e['Benötigte Helfer'];
-      document.getElementById('bearbeitenModal').style.display = 'flex';
-    });
-
-    bereich.appendChild(div);
-  });
-}
-
-function schliesseBearbeitenModal() {
-  document.getElementById('bearbeitenModal').style.display = 'none';
-}
-
-function speichereBearbeitung() {
-  const daten = {
-    action: 'updateEinsatz',
-    adminPassword: ADMIN_PASSWORT,
-    id: document.getElementById('bearbeitenID').value,
-    name: document.getElementById('bearbeitenTitel').value,
-    datum: document.getElementById('bearbeitenDatum').value,
-    uhrzeit: document.getElementById('bearbeitenUhrzeit').value,
-    verantwortlich: document.getElementById('bearbeitenVerantwortlich').value,
-    kategorie: document.getElementById('bearbeitenKategorie').value,
-    punkte: Number(document.getElementById('bearbeitenPunkte').value),
-    helferanzahl: Number(document.getElementById('bearbeitenHelferanzahl').value)
-  };
-
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify(daten),
-    headers: { 'Content-Type': 'application/json' }
-  }).then(() => {
-    schliesseBearbeitenModal();
-    ladeEinsaetze();
-  });
 }
 
 // --- INIT ---
