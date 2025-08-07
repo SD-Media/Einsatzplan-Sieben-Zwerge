@@ -1,5 +1,18 @@
+// main.js
+
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 const ADMIN_PASSWORT = 'SiebenZwerge';
+
+// Spaltenzuordnung
+const COL_ID = 0;
+const COL_NAME = 1;
+const COL_DATUM = 2;
+const COL_UHRZEIT = 3;
+const COL_VERANTWORTLICH = 4;
+const COL_KATEGORIE = 5;
+const COL_PUNKTE = 6;
+const COL_ANZAHL = 7;
+const COL_HELFER_START = 8;
 
 function showTab(id, event) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
@@ -25,9 +38,9 @@ function addEinsatz() {
         datum: document.getElementById('einsatzDatum').value,
         uhrzeit: document.getElementById('einsatzUhrzeit').value,
         verantwortlich: document.getElementById('einsatzVerantwortlich').value,
-        kategorie: document.getElementById('einsatzKategorie').value,
-        punkte: parseInt(document.getElementById('einsatzStunden').value),
-        helferanzahl: parseInt(document.getElementById('einsatzHelferanzahl').value)
+        kategorie: document.getElementById('einsatzKategorie')?.value || '',
+        punkte: Number(document.getElementById('einsatzStunden').value || 0),
+        helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value || 0)
     };
 
     fetch(SCRIPT_URL, {
@@ -49,67 +62,62 @@ function ladeEinsaetze() {
             let daten;
             try {
                 const parsed = JSON.parse(text);
-                daten = parsed.data || [];
-                if (!Array.isArray(daten)) throw new Error("Erwartetes Array nicht gefunden");
+                daten = parsed.data;
+                if (!Array.isArray(daten)) throw new Error('Ungültiges Format');
             } catch (e) {
-                console.error("JSON Fehler:", e);
-                document.getElementById('alleEinsaetze').innerText = 'Fehler beim Laden der Daten.';
-                document.getElementById('parentOverview').innerText = 'Fehler beim Laden der Elternübersicht.';
+                console.error('Fehler beim Parsen:', e);
+                document.getElementById('alleEinsaetze').innerText = 'Fehler beim Laden.';
                 return;
             }
-
             zeigeEinsaetze(daten);
-            zeigeEltern(daten);
-        })
-        .catch(err => {
-            console.error("Fetch Fehler:", err);
-            document.getElementById('alleEinsaetze').innerText = 'Verbindung zum Server fehlgeschlagen.';
+            zeigeEltern(daten, parsed.sollPunkte);
         });
 }
 
 function zeigeEinsaetze(daten) {
     const bereich = document.getElementById('alleEinsaetze');
     bereich.innerHTML = '';
-    daten.forEach(e => {
-        const helfer = getHelferListe(e).length;
+    for (let i = 1; i < daten.length; i++) {
+        const z = daten[i];
         const div = document.createElement('div');
         div.className = 'einsatz-box';
         div.innerHTML = `
-            <strong>${e["Arbeitseinsatz"] || e["Titel"] || "Unbenannt"}</strong><br>
-            ${e["Datum"] || ''} um ${e["Einsatzzeit"] || ''}<br>
-            ${e["Verantwortlicher"] || ''} – ${e["Punkte"] || 0} Punkte – ${helfer}/${e["Benötigte Helfer"] || 0} Helfer
+            <strong>${z[COL_NAME]}</strong><br>
+            ${z[COL_DATUM]} um ${z[COL_UHRZEIT]}<br>
+            ${z[COL_VERANTWORTLICH]} – ${z[COL_PUNKTE]} Std. – ${z[COL_ANZAHL]} Helfer
         `;
         bereich.appendChild(div);
-    });
+    }
 }
 
-function zeigeEltern(daten) {
+function zeigeEltern(daten, sollPunkte = 10) {
     const eltern = {};
-    daten.forEach(e => {
-        const punkte = Number(e["Punkte"] || 0);
-        getHelferListe(e).forEach(name => {
-            if (!eltern[name]) eltern[name] = 0;
-            eltern[name] += punkte;
-        });
-    });
+    for (let i = 1; i < daten.length; i++) {
+        const zeile = daten[i];
+        for (let j = COL_HELFER_START; j < zeile.length; j++) {
+            const name = zeile[j]?.trim();
+            if (name) {
+                eltern[name] = (eltern[name] || 0) + Number(zeile[COL_PUNKTE] || 0);
+            }
+        }
+    }
 
     const bereich = document.getElementById('parentOverview');
     bereich.innerHTML = '';
-    Object.entries(eltern).forEach(([name, ist]) => {
-        const soll = 10;
-        const diff = ist - soll;
+    for (const [name, ist] of Object.entries(eltern)) {
+        const diff = ist - sollPunkte;
         const el = document.createElement('div');
         el.className = 'einsatz-box';
         el.innerHTML = `
             <strong>${name}</strong><br>
             <div class="punkte">
                 <span>IST: ${ist}</span>
-                <span>SOLL: ${soll}</span>
+                <span>SOLL: ${sollPunkte}</span>
                 <span class="diff">Differenz: ${diff}</span>
             </div>
         `;
         bereich.appendChild(el);
-    });
+    }
 }
 
 function zeigeEigeneEinsaetze() {
@@ -122,44 +130,28 @@ function zeigeEigeneEinsaetze() {
             let daten;
             try {
                 const parsed = JSON.parse(text);
-                daten = parsed.data || [];
-                if (!Array.isArray(daten)) throw new Error("Erwartetes Array nicht gefunden");
+                daten = parsed.data;
+                if (!Array.isArray(daten)) throw new Error();
             } catch (e) {
-                console.error("Fehler bei Eigeneinsätzen:", e);
+                console.error('Fehler Eigene Einsätze:', e);
                 return;
             }
 
-            const eigene = daten.filter(e =>
-                getHelferListe(e).includes(name)
-            );
-
+            const eigene = daten.filter((z, i) => i > 0 && z.slice(COL_HELFER_START).some(h => h?.trim() === name));
             const bereich = document.getElementById('eigeneEinsaetze');
             bereich.innerHTML = '';
+
             eigene.forEach(e => {
                 const div = document.createElement('div');
                 div.className = 'einsatz-box';
                 div.innerHTML = `
-                    <strong>${e["Arbeitseinsatz"] || e["Titel"] || "Unbenannt"}</strong><br>
-                    ${e["Datum"] || ''} um ${e["Einsatzzeit"] || ''}<br>
-                    ${e["Verantwortlicher"] || ''} – ${e["Punkte"] || 0} Punkte
+                    <strong>${e[COL_NAME]}</strong><br>
+                    ${e[COL_DATUM]} um ${e[COL_UHRZEIT]}<br>
+                    ${e[COL_VERANTWORTLICH]} – ${e[COL_PUNKTE]} Std.
                 `;
                 bereich.appendChild(div);
             });
         });
 }
 
-function getHelferListe(e) {
-    const helfer = [];
-    for (let i = 1; i <= 10; i++) {
-        const feld = e[`Helfer${i}`];
-        if (feld && feld.trim()) helfer.push(feld.trim());
-    }
-    return helfer;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    ladeEinsaetze();
-    document.getElementById("adminPasswort").addEventListener("keypress", function (e) {
-        if (e.key === "Enter") loginAdmin();
-    });
-});
+document.addEventListener('DOMContentLoaded', ladeEinsaetze);
