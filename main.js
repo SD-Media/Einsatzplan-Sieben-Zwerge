@@ -1,18 +1,10 @@
-// main.js
+// main.js (neu, angepasst an Google Sheet Objektstruktur)
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 const ADMIN_PASSWORT = 'SiebenZwerge';
 
-// Spaltenzuordnung
-const COL_ID = 0;
-const COL_NAME = 1;
-const COL_DATUM = 2;
-const COL_UHRZEIT = 3;
-const COL_VERANTWORTLICH = 4;
-const COL_KATEGORIE = 5;
-const COL_PUNKTE = 6;
-const COL_ANZAHL = 7;
-const COL_HELFER_START = 8;
+let globaleDaten = [];
+let globaleSollPunkte = 10;
 
 function showTab(id, event) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
@@ -57,101 +49,92 @@ function addEinsatz() {
 
 function ladeEinsaetze() {
     fetch(SCRIPT_URL)
-        .then(res => res.text())
-        .then(text => {
-            let daten;
-            try {
-                const parsed = JSON.parse(text);
-                daten = parsed.data;
-                if (!Array.isArray(daten)) throw new Error('Ungültiges Format');
-            } catch (e) {
-                console.error('Fehler beim Parsen:', e);
-                document.getElementById('alleEinsaetze').innerText = 'Fehler beim Laden.';
-                return;
-            }
-            zeigeEinsaetze(daten);
-            zeigeEltern(daten, parsed.sollPunkte);
-        });
+        .then(res => res.json())
+        .then(json => {
+            globaleDaten = json.data;
+            globaleSollPunkte = json.sollPunkte;
+            zeigeEinsaetze(globaleDaten);
+            zeigeElternUebersicht(globaleDaten);
+        })
+        .catch(err => console.error('Fehler beim Laden:', err));
 }
 
 function zeigeEinsaetze(daten) {
     const bereich = document.getElementById('alleEinsaetze');
+    if (!bereich) return;
     bereich.innerHTML = '';
-    for (let i = 1; i < daten.length; i++) {
-        const z = daten[i];
+
+    daten.forEach(e => {
         const div = document.createElement('div');
         div.className = 'einsatz-box';
         div.innerHTML = `
-            <strong>${z[COL_NAME]}</strong><br>
-            ${z[COL_DATUM]} um ${z[COL_UHRZEIT]}<br>
-            ${z[COL_VERANTWORTLICH]} – ${z[COL_PUNKTE]} Std. – ${z[COL_ANZAHL]} Helfer
+            <strong>${e.Arbeitseinsatz}</strong><br>
+            ${e.Datum || '-'} um ${e.Einsatzzeit || '-'}<br>
+            ${e.Verantwortliche || '-'} – ${e.Punkte || 0} Std. – ${e['Benötigte Helfer'] || 0} Helfer
         `;
         bereich.appendChild(div);
-    }
+    });
 }
 
-function zeigeEltern(daten, sollPunkte = 10) {
+function zeigeElternUebersicht(daten) {
     const eltern = {};
-    for (let i = 1; i < daten.length; i++) {
-        const zeile = daten[i];
-        for (let j = COL_HELFER_START; j < zeile.length; j++) {
-            const name = zeile[j]?.trim();
-            if (name) {
-                eltern[name] = (eltern[name] || 0) + Number(zeile[COL_PUNKTE] || 0);
+
+    daten.forEach(e => {
+        for (let key in e) {
+            if (key.startsWith('Helfer') && e[key]) {
+                const name = e[key].trim();
+                if (name) {
+                    eltern[name] = (eltern[name] || 0) + Number(e.Punkte || 0);
+                }
             }
         }
-    }
+    });
 
     const bereich = document.getElementById('parentOverview');
     bereich.innerHTML = '';
-    for (const [name, ist] of Object.entries(eltern)) {
-        const diff = ist - sollPunkte;
+    Object.entries(eltern).forEach(([name, ist]) => {
+        const diff = ist - globaleSollPunkte;
         const el = document.createElement('div');
         el.className = 'einsatz-box';
         el.innerHTML = `
             <strong>${name}</strong><br>
             <div class="punkte">
                 <span>IST: ${ist}</span>
-                <span>SOLL: ${sollPunkte}</span>
-                <span class="diff">Differenz: ${diff}</span>
+                <span>SOLL: ${globaleSollPunkte}</span>
+                <span class="diff">Differenz: ${diff > 0 ? '+' : ''}${diff}</span>
             </div>
         `;
         bereich.appendChild(el);
-    }
+    });
 }
 
 function zeigeEigeneEinsaetze() {
     const name = document.getElementById('nameInput').value.trim();
     if (!name) return;
 
-    fetch(SCRIPT_URL)
-        .then(res => res.text())
-        .then(text => {
-            let daten;
-            try {
-                const parsed = JSON.parse(text);
-                daten = parsed.data;
-                if (!Array.isArray(daten)) throw new Error();
-            } catch (e) {
-                console.error('Fehler Eigene Einsätze:', e);
-                return;
-            }
+    const eigene = globaleDaten.filter(e =>
+        Object.keys(e).some(k => k.startsWith('Helfer') && e[k]?.trim() === name)
+    );
 
-            const eigene = daten.filter((z, i) => i > 0 && z.slice(COL_HELFER_START).some(h => h?.trim() === name));
-            const bereich = document.getElementById('eigeneEinsaetze');
-            bereich.innerHTML = '';
+    const bereich = document.getElementById('eigeneEinsaetze');
+    bereich.innerHTML = '';
 
-            eigene.forEach(e => {
-                const div = document.createElement('div');
-                div.className = 'einsatz-box';
-                div.innerHTML = `
-                    <strong>${e[COL_NAME]}</strong><br>
-                    ${e[COL_DATUM]} um ${e[COL_UHRZEIT]}<br>
-                    ${e[COL_VERANTWORTLICH]} – ${e[COL_PUNKTE]} Std.
-                `;
-                bereich.appendChild(div);
-            });
-        });
+    let punkte = 0;
+    eigene.forEach(e => {
+        punkte += Number(e.Punkte || 0);
+        const div = document.createElement('div');
+        div.className = 'einsatz-box';
+        div.innerHTML = `
+            <strong>${e.Arbeitseinsatz}</strong><br>
+            ${e.Datum || '-'} um ${e.Einsatzzeit || '-'}<br>
+            ${e.Verantwortliche || '-'} – ${e.Punkte || 0} Std.
+        `;
+        bereich.appendChild(div);
+    });
+
+    const summary = document.createElement('div');
+    summary.innerHTML = `<strong>Gesammelte Punkte: ${punkte}/${globaleSollPunkte} (Differenz: ${punkte - globaleSollPunkte})</strong>`;
+    bereich.prepend(summary);
 }
 
 document.addEventListener('DOMContentLoaded', ladeEinsaetze);
