@@ -1,79 +1,113 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arbeitseinsätze Waldorfkindergarten Sieben Zwerge</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arbeitseinsätze Waldorfkindergarten Sieben Zwerge</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="main.js"></script>
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #eigeneEinsaetze, #eigeneEinsaetze * {
+                visibility: visible;
+            }
+
+            #eigeneEinsaetze {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+
+            button, input {
+                display: none !important;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-  <h1>Arbeitseinsätze Waldorfkindergarten Sieben Zwerge</h1>
-  <div class="tabs">
-    <button class="nav-tab active" onclick="showTab('einsatzTab', event)">Einsätze</button>
-    <button class="nav-tab" onclick="showTab('adminTab', event)">Admin</button>
-  </div>
+    <div class="container">
+        <h1>Arbeitseinsätze Waldorfkindergarten Sieben Zwerge</h1>
 
-  <div id="einsatzTab" class="tab-content active">
-    <div class="kategorien">
-      <span class="kategorie gruen">Gartenarbeit</span>
-      <span class="kategorie orange">Verkaufsaktion</span>
-      <span class="kategorie lila">Feste</span>
-      <span class="kategorie blau">Kindergartenpflege</span>
-      <span class="kategorie grau">Sonstiges</span>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('einsatz-tab', event)">Einsätze</button>
+            <button class="nav-tab" onclick="showTab('admin-tab', event)">Admin</button>
+        </div>
+
+        <div id="einsatz-tab" class="tab-content active">
+            <h2>Kategorien</h2>
+            <ul class="kategorien">
+                <li class="kategorie garten">Gartenarbeit</li>
+                <li class="kategorie verkauf">Verkaufsaktion</li>
+                <li class="kategorie feste">Feste</li>
+                <li class="kategorie pflege">Kindergartenpflege</li>
+                <li class="kategorie sonstiges">Sonstiges</li>
+            </ul>
+
+            <h2>Einsätze</h2>
+            <div id="einsatzUebersicht">Lade Einsätze...</div>
+
+            <h2>Elternübersicht</h2>
+            <table id="parentOverviewTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>IST-Punkte</th>
+                        <th>SOLL-Punkte</th>
+                        <th>Differenz</th>
+                    </tr>
+                </thead>
+                <tbody id="parentOverview"></tbody>
+            </table>
+
+            <h2>Meine Einsätze</h2>
+            <div style="margin-top: 20px;">
+                <input id="suchName" type="text" placeholder="Geben Sie Ihren Namen ein, um Ihre Einsätze anzuzeigen..." class="name-input" />
+                
+                <button onclick="zeigeEigeneEinsaetze()" class="btn btn-primary">Meine Einsätze anzeigen</button>
+                <button onclick="druckeEinsaetze()" class="btn btn-secondary">Drucken</button>
+            </div>
+
+            <p id="eigenePunkteInfo" style="font-weight: bold; margin-top: 20px;"></p>
+            <div id="eigeneEinsaetze"></div>
+        </div>
+
+        <div id="admin-tab" class="tab-content">
+            <h2>Admin-Bereich</h2>
+            <div style="margin-bottom: 10px;">
+                <input class="password-input" type="password" id="adminPasswort" placeholder="Passwort" onkeydown="if(event.key === 'Enter') loginAdmin()" />
+                <label>
+                    <input type="checkbox" onclick="togglePassword()" />
+                    Passwort anzeigen
+                </label>
+                <button class="btn btn-primary" onclick="loginAdmin()">Anmelden</button>
+            </div>
+
+            <div id="adminArea" style="display:none;">
+                <h3>Neuen Einsatz hinzufügen</h3>
+                <input type="text" class="form-input" id="einsatzTitel" placeholder="Arbeitseinsatz" />
+                <input type="date" class="form-input" id="einsatzDatum" />
+                <input type="time" class="form-input" id="einsatzUhrzeit" />
+                <input type="text" class="form-input" id="einsatzVerantwortlich" placeholder="Verantwortlicher" />
+                <select class="form-input" id="einsatzKategorie">
+                    <option value="">Kategorie wählen</option>
+                    <option value="garten">Gartenarbeit</option>
+                    <option value="verkauf">Verkaufsaktion</option>
+                    <option value="feste">Feste</option>
+                    <option value="pflege">Kindergartenpflege</option>
+                    <option value="sonstiges">Sonstiges</option>
+                </select>
+                <input type="number" class="form-input" id="einsatzStunden" placeholder="Stunden" />
+                <input type="number" class="form-input" id="einsatzHelferanzahl" placeholder="Helferanzahl" />
+                <button class="btn btn-success" onclick="addEinsatz()">Einsatz hinzufügen</button>
+
+                <h3>Alle Einsätze</h3>
+                <div id="alleEinsaetze">Lade Einsätze...</div>
+            </div>
+        </div>
     </div>
-
-    <h2>Elternübersicht</h2>
-    <table class="uebersicht">
-      <thead>
-        <tr>
-          <th>Name</th><th>IST-Punkte</th><th>SOLL-Punkte</th><th>Differenz</th>
-        </tr>
-      </thead>
-      <tbody id="parentOverview"></tbody>
-    </table>
-
-    <div class="eigene-einsaetze">
-      <input id="nameInput" placeholder="Geben Sie Ihren Namen ein...">
-      <button onclick="zeigeEigeneEinsaetze()">Meine Einsätze anzeigen</button>
-    </div>
-
-    <div id="eigeneEinsaetze"></div>
-    <div id="einsatzListe"></div>
-    <button onclick="window.print()">Drucken</button>
-  </div>
-
-  <div id="adminTab" class="tab-content">
-    <p>Bitte geben Sie das Passwort ein:</p>
-    <input id="adminPasswort" type="password">
-    <button onclick="loginAdmin()">Anmelden</button>
-    <label><input type="checkbox" onclick="togglePasswort()"> Passwort anzeigen</label>
-
-    <div id="adminArea" style="display:none">
-      <h2>Neuen Einsatz erstellen</h2>
-      <input id="einsatzTitel" placeholder="Einsatzname">
-      <input id="einsatzDatum" placeholder="Datum (TT.MM.JJJJ)">
-      <input id="einsatzUhrzeit" placeholder="Uhrzeit (z.B. 14:00 - 17:00)">
-      <input id="einsatzVerantwortlich" placeholder="Verantwortlicher">
-      <select id="einsatzKategorie">
-        <option value="Gartenarbeit">Gartenarbeit</option>
-        <option value="Verkaufsaktion">Verkaufsaktion</option>
-        <option value="Feste">Feste</option>
-        <option value="Kindergartenpflege">Kindergartenpflege</option>
-        <option value="Sonstiges">Sonstiges</option>
-      </select>
-      <input id="einsatzStunden" placeholder="Punkte">
-      <input id="einsatzHelferanzahl" placeholder="Helferanzahl">
-      <button onclick="addEinsatz()">Einsatz erstellen</button>
-
-      <h3>Helfereintragungen verwalten</h3>
-      <button class="btn-danger" onclick="resetAlleHelfer()">Alle Helfereinträge löschen</button>
-
-      <h3>Vorhandene Einsätze verwalten</h3>
-      <div id="adminEinsaetze"></div>
-    </div>
-  </div>
-</div>
-<script src="main.js"></script>
 </body>
 </html>
