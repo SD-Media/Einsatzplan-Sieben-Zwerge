@@ -44,10 +44,24 @@ function addEinsatz() {
 
 function ladeEinsaetze() {
     fetch(SCRIPT_URL + '?action=getData')
-        .then(res => res.json())
-        .then(daten => {
+        .then(res => res.text())
+        .then(text => {
+            console.log("RAW Antwort:", text);
+            let daten;
+            try {
+                daten = JSON.parse(text);
+            } catch (e) {
+                console.error("JSON Fehler:", e);
+                document.getElementById('alleEinsaetze').innerText = 'Fehler beim Laden der Daten.';
+                document.getElementById('parentOverview').innerText = 'Fehler beim Laden der Elternübersicht.';
+                return;
+            }
             zeigeEinsaetze(daten);
             zeigeEltern(daten);
+        })
+        .catch(err => {
+            console.error("Fetch Fehler:", err);
+            document.getElementById('alleEinsaetze').innerText = 'Verbindung zum Server fehlgeschlagen.';
         });
 }
 
@@ -75,7 +89,6 @@ function zeigeEltern(daten) {
             if (!eltern[name]) eltern[name] = 0;
             eltern[name] += Number(e.stunden || 0);
         });
-
     });
 
     const bereich = document.getElementById('parentOverview');
