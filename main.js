@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/your-script-id/exec'; // <-- anpassen
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 
 function showTab(id, event) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
