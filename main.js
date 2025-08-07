@@ -1,5 +1,3 @@
-// main.js (überarbeitet: Einsatzanzeige mit interaktiven Helferfeldern)
-
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 const ADMIN_PASSWORT = 'SiebenZwerge';
 
@@ -30,21 +28,29 @@ function addEinsatz() {
         datum: document.getElementById('einsatzDatum').value,
         uhrzeit: document.getElementById('einsatzUhrzeit').value,
         verantwortlich: document.getElementById('einsatzVerantwortlich').value,
-        kategorie: document.getElementById('einsatzKategorie')?.value || '',
-        punkte: Number(document.getElementById('einsatzStunden').value || 0),
-        helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value || 0)
+        kategorie: document.getElementById('einsatzKategorie').value,
+        punkte: Number(document.getElementById('einsatzStunden').value),
+        helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value)
     };
 
     fetch(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify(daten),
         headers: { 'Content-Type': 'application/json' }
-    })
-    .then(res => res.text())
-    .then(() => {
-        alert('Einsatz hinzugefügt');
-        ladeEinsaetze();
-    });
+    }).then(res => res.text()).then(() => ladeEinsaetze());
+}
+
+function resetAlleHelfer() {
+    if (!confirm("Alle Helfereinträge wirklich löschen?")) return;
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'removeAllHelfer',
+            adminPassword: ADMIN_PASSWORT
+        }),
+        headers: { 'Content-Type': 'application/json' }
+    }).then(() => ladeEinsaetze());
 }
 
 function ladeEinsaetze() {
@@ -53,93 +59,35 @@ function ladeEinsaetze() {
         .then(json => {
             globaleDaten = json.data;
             globaleSollPunkte = json.sollPunkte;
-            zeigeEinsaetze(globaleDaten);
             zeigeElternUebersicht(globaleDaten);
-        })
-        .catch(err => console.error('Fehler beim Laden:', err));
-}
-
-function zeigeEinsaetze(daten) {
-    const bereich = document.getElementById('alleEinsaetze');
-    if (!bereich) return;
-    bereich.innerHTML = '';
-
-    daten.forEach((e, einsatzIndex) => {
-        const div = document.createElement('div');
-        div.className = 'einsatz-box';
-
-        const helferHTML = [];
-        for (let i = 1; i <= 10; i++) {
-            const feldName = 'Helfer' + i;
-            const name = e[feldName]?.trim() || '';
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = name;
-            input.placeholder = 'Name eintragen...';
-            input.className = name ? 'helfer-input filled' : 'helfer-input';
-            input.dataset.einsatzId = e.ID;
-            input.dataset.index = i - 1;
-
-            input.addEventListener('change', () => {
-                const neuerName = input.value.trim();
-                if (!neuerName) return;
-
-                fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'setHelfer',
-                        id: e.ID,
-                        index: i - 1,
-                        name: neuerName
-                    }),
-                    headers: { 'Content-Type': 'application/json' }
-                }).then(() => ladeEinsaetze());
-            });
-            helferHTML.push(input);
-        }
-
-        div.innerHTML = `
-            <div><strong>${e.Arbeitseinsatz}</strong></div>
-            <div>${e.Datum || '-'} – ${e.Einsatzzeit || '-'}</div>
-            <div>Verantwortlich: ${e.Verantwortliche || '-'}</div>
-            <div>Kategorie: ${e.Einsatzkategorie || '-'}</div>
-            <div>Punkte: ${e.Punkte || 0} | Helfer: ${e['Benötigte Helfer'] || 0}</div>
-        `;
-        helferHTML.forEach(el => div.appendChild(el));
-
-        bereich.appendChild(div);
-    });
+            zeigeAlleEinsaetze(globaleDaten);
+            zeigeAdminEinsaetze(globaleDaten);
+        });
 }
 
 function zeigeElternUebersicht(daten) {
     const eltern = {};
-
     daten.forEach(e => {
         for (let key in e) {
             if (key.startsWith('Helfer') && e[key]) {
                 const name = e[key].trim();
-                if (name) {
-                    eltern[name] = (eltern[name] || 0) + Number(e.Punkte || 0);
-                }
+                eltern[name] = (eltern[name] || 0) + Number(e.Punkte || 0);
             }
         }
     });
 
-    const bereich = document.getElementById('parentOverview');
-    bereich.innerHTML = '';
+    const tbody = document.getElementById('parentOverview');
+    tbody.innerHTML = '';
     Object.entries(eltern).forEach(([name, ist]) => {
         const diff = ist - globaleSollPunkte;
-        const el = document.createElement('div');
-        el.className = 'einsatz-box';
-        el.innerHTML = `
-            <strong>${name}</strong><br>
-            <div class="punkte">
-                <span>IST: ${ist}</span>
-                <span>SOLL: ${globaleSollPunkte}</span>
-                <span class="diff">Differenz: ${diff > 0 ? '+' : ''}${diff}</span>
-            </div>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${name}</td>
+            <td>${ist}</td>
+            <td>${globaleSollPunkte}</td>
+            <td class="${diff >= 0 ? 'diff-positive' : 'diff-negative'}">${diff}</td>
         `;
-        bereich.appendChild(el);
+        tbody.appendChild(tr);
     });
 }
 
@@ -161,15 +109,81 @@ function zeigeEigeneEinsaetze() {
         div.className = 'einsatz-box';
         div.innerHTML = `
             <strong>${e.Arbeitseinsatz}</strong><br>
-            ${e.Datum || '-'} um ${e.Einsatzzeit || '-'}<br>
-            ${e.Verantwortliche || '-'} – ${e.Punkte || 0} Std.
+            ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
+            Verantwortlich: ${e.Verantwortliche || '-'}<br>
+            Kategorie: ${e.Einsatzkategorie || '-'}<br>
+            Punkte: ${e.Punkte || 0}
         `;
         bereich.appendChild(div);
     });
 
     const summary = document.createElement('div');
-    summary.innerHTML = `<strong>Gesammelte Punkte: ${punkte}/${globaleSollPunkte} (Differenz: ${punkte - globaleSollPunkte})</strong>`;
+    summary.innerHTML = `<strong>Gesammelte Punkte: ${punkte} / ${globaleSollPunkte} (Differenz: ${punkte - globaleSollPunkte})</strong>`;
     bereich.prepend(summary);
+}
+
+function zeigeAlleEinsaetze(daten) {
+    const bereich = document.getElementById('einsatzListe');
+    bereich.innerHTML = '';
+    daten.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'einsatz-box';
+        div.innerHTML = `
+            <strong>${e.Arbeitseinsatz}</strong><br>
+            ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
+            Kategorie: ${e.Einsatzkategorie || '-'}<br>
+            Verantwortlich: ${e.Verantwortliche || '-'}<br>
+            Punkte: ${e.Punkte || 0} | Helfer: ${e['Benötigte Helfer'] || 0}
+        `;
+
+        for (let i = 1; i <= 10; i++) {
+            const feld = 'Helfer' + i;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = e[feld] || '';
+            input.placeholder = 'Name eintragen...';
+            input.className = input.value ? 'helfer-input filled' : 'helfer-input';
+            input.dataset.id = e.ID;
+            input.dataset.index = i - 1;
+
+            input.addEventListener('change', () => {
+                const neuerName = input.value.trim();
+                if (!neuerName) return;
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'setHelfer',
+                        id: e.ID,
+                        index: i - 1,
+                        name: neuerName
+                    }),
+                    headers: { 'Content-Type': 'application/json' }
+                }).then(() => ladeEinsaetze());
+            });
+
+            div.appendChild(input);
+        }
+
+        bereich.appendChild(div);
+    });
+}
+
+function zeigeAdminEinsaetze(daten) {
+    const bereich = document.getElementById('alleEinsaetze');
+    if (!bereich) return;
+    bereich.innerHTML = '';
+    daten.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'einsatz-box';
+        div.innerHTML = `
+            <strong>${e.Arbeitseinsatz}</strong><br>
+            ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
+            Kategorie: ${e.Einsatzkategorie || '-'}<br>
+            Verantwortlich: ${e.Verantwortliche || '-'}<br>
+            Punkte: ${e.Punkte || 0} | Helfer: ${e['Benötigte Helfer'] || 0}
+        `;
+        bereich.appendChild(div);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', ladeEinsaetze);
