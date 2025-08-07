@@ -106,6 +106,16 @@ input, select {
   box-sizing: border-box;
 }
 
+input[type="checkbox"] {
+  width: auto;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+#adminPasswort {
+  max-width: 300px;
+}
+
 button {
   padding: 10px 20px;
   margin: 5px 0 15px 0;
@@ -128,6 +138,12 @@ button:hover {
 .btn-primary {
   background-color: #2196f3;
   color: white;
+}
+
+.btn-print {
+  background-color: #4caf50;
+  color: white;
+  margin-top: 10px;
 }
 
 .einsatz-box {
