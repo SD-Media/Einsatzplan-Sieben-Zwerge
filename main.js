@@ -143,6 +143,12 @@ function zeigeAlleEinsaetze(daten) {
       Punkte: ${e.Punkte || 0} | Helfer: ${e['Benötigte Helfer'] || 0}
     `;
 
+    const einsatzId = e.ID;
+    if (!einsatzId) {
+      console.warn('Kein Einsatz-ID gefunden:', e);
+      return;
+    }
+
     for (let i = 1; i <= 10; i++) {
       const feld = 'Helfer' + i;
       const input = document.createElement('input');
@@ -150,22 +156,35 @@ function zeigeAlleEinsaetze(daten) {
       input.value = e[feld] || '';
       input.placeholder = 'Name eintragen...';
       input.className = input.value ? 'helfer-input filled' : 'helfer-input';
-      input.dataset.id = e.ID;
+      input.dataset.id = einsatzId;
       input.dataset.index = i - 1;
+
+      const status = document.createElement('span');
+      status.style.marginLeft = '10px';
+      status.style.color = '#4caf50';
+      status.style.fontWeight = 'bold';
+      status.style.display = 'none';
+      div.appendChild(status);
 
       input.addEventListener('change', () => {
         const neuerName = input.value.trim();
         input.classList.toggle('filled', !!neuerName);
+
         fetch(SCRIPT_URL, {
           method: 'POST',
           body: JSON.stringify({
             action: 'setHelfer',
-            id: e.ID,
-            index: i - 1,
+            id: einsatzId,
+            index: Number(input.dataset.index),
             name: neuerName
           }),
           headers: { 'Content-Type': 'application/json' }
-        }).then(() => ladeEinsaetze());
+        }).then(() => {
+          status.textContent = '✔ Gespeichert';
+          status.style.display = 'inline';
+          setTimeout(() => status.style.display = 'none', 2000);
+          ladeEinsaetze();
+        });
       });
 
       div.appendChild(input);
