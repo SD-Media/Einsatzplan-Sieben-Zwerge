@@ -27,19 +27,32 @@
             </ul>
 
             <h2>Elternübersicht</h2>
-            <p><strong>Name IST-Punkte SOLL-Punkte Differenz</strong></p>
-            <p class="loading">Lade Daten...</p>
-            <input class="name-input" type="text" placeholder="Geben Sie Ihren Namen ein" />
-            <button class="btn btn-primary">Daten aktualisieren</button>
+            <div id="parentOverview"></div>
 
-            <h3>Lade Einsätze...</h3>
+            <input class="name-input" type="text" id="nameInput" placeholder="Geben Sie Ihren Namen ein" />
+            <button class="btn btn-primary" onclick="zeigeEigeneEinsaetze()">Meine Einsätze anzeigen</button>
+
+            <div id="eigeneEinsaetze"></div>
         </div>
 
         <div id="admin-tab" class="tab-content">
             <h2>Admin-Bereich</h2>
             <p>Bitte geben Sie das Passwort ein:</p>
-            <input class="password-input" type="password" placeholder="Passwort" />
-            <button class="btn btn-primary">Anmelden</button>
+            <input class="password-input" type="password" id="adminPasswort" placeholder="Passwort" />
+            <button class="btn btn-primary" onclick="loginAdmin()">Anmelden</button>
+
+            <div id="adminArea" style="display:none;">
+                <h3>Neuen Einsatz hinzufügen</h3>
+                <input type="text" class="form-input" id="einsatzTitel" placeholder="Arbeitseinsatz" />
+                <input type="date" class="form-input" id="einsatzDatum" />
+                <input type="time" class="form-input" id="einsatzUhrzeit" />
+                <input type="text" class="form-input" id="einsatzVerantwortlich" placeholder="Verantwortlicher" />
+                <input type="number" class="form-input" id="einsatzStunden" placeholder="Stunden" />
+                <input type="number" class="form-input" id="einsatzHelferanzahl" placeholder="Helferanzahl" />
+                <button class="btn btn-success" onclick="addEinsatz()">Einsatz hinzufügen</button>
+                <h3>Alle Einsätze</h3>
+                <div id="alleEinsaetze"></div>
+            </div>
         </div>
     </div>
 </body>
