@@ -1,9 +1,10 @@
-// main.js – vollständig überarbeitet
+// main.js – vollständig überarbeitet mit Farbfixes, Punktausgabe und Druckkorrektur
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 const ADMIN_PASSWORT = 'SiebenZwerge';
 
 let globaleDaten = [];
 let globaleSollPunkte = 10;
+let eigeneEinsaetzeGedruckt = false;
 
 // Tabs anzeigen
 function showTab(id, event) {
@@ -75,6 +76,8 @@ function zeigeEigeneEinsaetze() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) return;
 
+  eigeneEinsaetzeGedruckt = true;
+
   const eigene = globaleDaten.filter(e =>
     Object.keys(e).some(k => k.startsWith('Helfer') && e[k]?.trim() === name)
   );
@@ -85,14 +88,15 @@ function zeigeEigeneEinsaetze() {
   let punkte = 0;
   eigene.forEach(e => {
     punkte += Number(e.Punkte || 0);
-    const farbe = e.Einsatzkategorie?.toLowerCase().replace(/\s+/g, '');
+    const farbe = e.Einsatzkategorie?.toLowerCase().replace(/\s+/g, '') || 'grau';
     const div = document.createElement('div');
     div.className = `einsatz-box einsatz-${farbe}`;
     div.innerHTML = `
       <strong>${e.Arbeitseinsatz}</strong><br>
       ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
       Verantwortlich: ${e.Verantwortliche || '-'}<br>
-      Kategorie: ${e.Einsatzkategorie || '-'}
+      Kategorie: ${e.Einsatzkategorie || '-'}<br>
+      Punkte: ${e.Punkte || '0'}
     `;
     bereich.appendChild(div);
   });
@@ -104,7 +108,13 @@ function zeigeEigeneEinsaetze() {
   const druckBtn = document.createElement('button');
   druckBtn.textContent = 'Diese Ansicht drucken';
   druckBtn.className = 'btn btn-print';
-  druckBtn.onclick = () => window.print();
+  druckBtn.onclick = () => {
+    if (!eigeneEinsaetzeGedruckt) {
+      alert('Bitte zuerst Ihre Einsätze anzeigen.');
+      return;
+    }
+    window.print();
+  };
   bereich.appendChild(druckBtn);
 }
 
@@ -114,16 +124,18 @@ function zeigeAlleEinsaetze(daten) {
 
   daten.forEach(e => {
     const div = document.createElement('div');
-    const farbe = e.Einsatzkategorie?.toLowerCase().replace(/\s+/g, '');
+    const farbe = e.Einsatzkategorie?.toLowerCase().replace(/\s+/g, '') || 'grau';
     div.className = `einsatz-box einsatz-${farbe}`;
     div.innerHTML = `
       <strong>${e.Arbeitseinsatz}</strong><br>
       ${e.Datum || ''} – ${e.Einsatzzeit || ''}<br>
       Verantwortlich: ${e.Verantwortliche || ''}<br>
       Kategorie: ${e.Einsatzkategorie || ''}<br>
+      Punkte: ${e.Punkte || '0'}<br>
     `;
 
-    for (let i = 0; i < Number(e.Helferanzahl || 0); i++) {
+    const helferanzahl = parseInt(e.Helferanzahl || 0);
+    for (let i = 0; i < helferanzahl; i++) {
       const input = document.createElement('input');
       input.className = 'helfer-input';
       input.placeholder = 'Name eintragen...';
