@@ -16,8 +16,8 @@
             <button class="nav-tab" onclick="showTab('admin-tab', event)">Admin</button>
         </div>
 
+        <!-- Tab: Elternbereich -->
         <div id="einsatz-tab" class="tab-content active">
-            <h2>Kategorien</h2>
             <ul class="kategorien">
                 <li class="kategorie garten">Gartenarbeit</li>
                 <li class="kategorie verkauf">Verkaufsaktion</li>
@@ -26,32 +26,57 @@
                 <li class="kategorie sonstiges">Sonstiges</li>
             </ul>
 
-            <h2>Elternübersicht</h2>
-            <div id="parentOverview">Lade Elternübersicht...</div>
+            <h3>Elternübersicht</h3>
+            <table class="eltern-tabelle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>IST-Punkte</th>
+                        <th>SOLL-Punkte</th>
+                        <th>Differenz</th>
+                    </tr>
+                </thead>
+                <tbody id="parentOverview"></tbody>
+            </table>
 
-            <input class="name-input" type="text" id="nameInput" placeholder="Geben Sie Ihren Namen ein" onkeydown="if(event.key === 'Enter') zeigeEigeneEinsaetze()" />
+            <input class="name-input" type="text" id="nameInput" placeholder="Geben Sie Ihren Namen ein, um Ihre Einsätze anzuzeigen…" onkeydown="if(event.key==='Enter')zeigeEigeneEinsaetze()" />
             <button class="btn btn-primary" onclick="zeigeEigeneEinsaetze()">Meine Einsätze anzeigen</button>
 
             <div id="eigeneEinsaetze"></div>
             <button class="btn btn-print" onclick="window.print()">Drucken</button>
+
+            <h3>Alle Einsätze</h3>
+            <div id="einsatzListe">Lade Einsätze...</div>
         </div>
 
+        <!-- Tab: Adminbereich -->
         <div id="admin-tab" class="tab-content">
             <h2>Admin-Bereich</h2>
             <p>Bitte geben Sie das Passwort ein:</p>
-            <input class="password-input" type="password" id="adminPasswort" placeholder="Passwort" onkeydown="if(event.key === 'Enter') loginAdmin()" />
+            <input class="password-input" type="password" id="adminPasswort" placeholder="Passwort" onkeydown="if(event.key==='Enter')loginAdmin()" />
             <button class="btn btn-primary" onclick="loginAdmin()">Anmelden</button>
 
             <div id="adminArea" style="display:none;">
-                <h3>Neuen Einsatz hinzufügen</h3>
+                <h3>Neuen Einsatz erstellen</h3>
                 <input type="text" class="form-input" id="einsatzTitel" placeholder="Arbeitseinsatz" />
                 <input type="date" class="form-input" id="einsatzDatum" />
                 <input type="time" class="form-input" id="einsatzUhrzeit" />
                 <input type="text" class="form-input" id="einsatzVerantwortlich" placeholder="Verantwortlicher" />
-                <input type="number" class="form-input" id="einsatzStunden" placeholder="Stunden" />
+                <select id="einsatzKategorie" class="form-input">
+                    <option value="Gartenarbeit">Gartenarbeit</option>
+                    <option value="Verkaufsaktion">Verkaufsaktion</option>
+                    <option value="Feste">Feste</option>
+                    <option value="Kindergartenpflege">Kindergartenpflege</option>
+                    <option value="Sonstiges">Sonstiges</option>
+                </select>
+                <input type="number" class="form-input" id="einsatzStunden" placeholder="Punkte" />
                 <input type="number" class="form-input" id="einsatzHelferanzahl" placeholder="Helferanzahl" />
-                <button class="btn btn-success" onclick="addEinsatz()">Einsatz hinzufügen</button>
-                <h3>Alle Einsätze</h3>
+                <button class="btn btn-success" onclick="addEinsatz()">Einsatz erstellen</button>
+
+                <h3>Helfereintragungen verwalten</h3>
+                <button class="btn btn-danger" onclick="resetAlleHelfer()">Alle Helfereinträge löschen</button>
+
+                <h3>Vorhandene Einsätze verwalten</h3>
                 <div id="alleEinsaetze">Lade Einsätze...</div>
             </div>
         </div>
