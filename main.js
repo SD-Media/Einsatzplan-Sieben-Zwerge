@@ -1,4 +1,7 @@
+// main.js
+
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
+const ADMIN_PASSWORT = 'admin123';
 
 function showTab(id, event) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
@@ -8,8 +11,8 @@ function showTab(id, event) {
 }
 
 function loginAdmin() {
-    const password = document.getElementById('adminPasswort').value;
-    if (password === '7ZwergeRadolfzell') {
+    const eingabe = document.getElementById('adminPasswort').value;
+    if (eingabe === ADMIN_PASSWORT) {
         document.getElementById('adminArea').style.display = 'block';
     } else {
         alert('Falsches Passwort');
@@ -17,8 +20,9 @@ function loginAdmin() {
 }
 
 function addEinsatz() {
-    const data = {
-        arbeitseinsatz: document.getElementById('einsatzTitel').value,
+    const daten = {
+        action: 'addEinsatz',
+        titel: document.getElementById('einsatzTitel').value,
         datum: document.getElementById('einsatzDatum').value,
         uhrzeit: document.getElementById('einsatzUhrzeit').value,
         verantwortlich: document.getElementById('einsatzVerantwortlich').value,
@@ -26,33 +30,95 @@ function addEinsatz() {
         helferanzahl: document.getElementById('einsatzHelferanzahl').value
     };
 
-    fetch(SCRIPT_URL + '?action=addEinsatz', {
+    fetch(SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(daten),
         headers: { 'Content-Type': 'application/json' }
     })
     .then(res => res.text())
-    .then(msg => {
+    .then(() => {
         alert('Einsatz hinzugefügt');
-        location.reload();
-    })
-    .catch(err => console.error('Fehler beim Hinzufügen:', err));
+        ladeEinsaetze();
+    });
+}
+
+function ladeEinsaetze() {
+    fetch(SCRIPT_URL + '?action=getData')
+        .then(res => res.json())
+        .then(daten => {
+            zeigeEinsaetze(daten);
+            zeigeEltern(daten);
+        });
+}
+
+function zeigeEinsaetze(daten) {
+    const bereich = document.getElementById('alleEinsaetze');
+    bereich.innerHTML = '';
+    daten.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'einsatz-box';
+        div.innerHTML = `
+            <strong>${e.titel}</strong><br>
+            ${e.datum} um ${e.uhrzeit}<br>
+            ${e.verantwortlich} – ${e.stunden} Std. – ${e.helferanzahl} Helfer
+        `;
+        bereich.appendChild(div);
+    });
+}
+
+function zeigeEltern(daten) {
+    const eltern = {};
+    daten.forEach(e => {
+        e.helfer?.split(',').forEach(name => {
+            name = name.trim();
+            if (!name) return;
+            if (!eltern[name]) eltern[name] = 0;
+            eltern[name] += Number(e.stunden || 0);
+        });
+
+    });
+
+    const bereich = document.getElementById('parentOverview');
+    bereich.innerHTML = '';
+    Object.entries(eltern).forEach(([name, ist]) => {
+        const soll = 10;
+        const diff = ist - soll;
+        const el = document.createElement('div');
+        el.className = 'einsatz-box';
+        el.innerHTML = `
+            <strong>${name}</strong><br>
+            <div class="punkte">
+                <span>IST: ${ist}</span>
+                <span>SOLL: ${soll}</span>
+                <span class="diff">Differenz: ${diff}</span>
+            </div>
+        `;
+        bereich.appendChild(el);
+    });
 }
 
 function zeigeEigeneEinsaetze() {
     const name = document.getElementById('nameInput').value.trim();
-    if (!name) {
-        alert('Bitte Namen eingeben');
-        return;
-    }
+    if (!name) return;
 
     fetch(SCRIPT_URL + '?action=getData')
         .then(res => res.json())
-        .then(data => {
-            const eigene = data.filter(e => e.helfer.includes(name));
-            const block = document.getElementById('eigeneEinsaetze');
-            block.innerHTML = '<h3>Meine Einsätze</h3>' +
-                eigene.map(e => `<p>${e.datum} – ${e.arbeitseinsatz}</p>`).join('');
-        })
-        .catch(err => console.error('Fehler beim Abrufen:', err));
+        .then(daten => {
+            const eigene = daten.filter(e => e.helfer?.split(',').map(h => h.trim()).includes(name));
+            const bereich = document.getElementById('eigeneEinsaetze');
+            bereich.innerHTML = '';
+
+            eigene.forEach(e => {
+                const div = document.createElement('div');
+                div.className = 'einsatz-box';
+                div.innerHTML = `
+                    <strong>${e.titel}</strong><br>
+                    ${e.datum} um ${e.uhrzeit}<br>
+                    ${e.verantwortlich} – ${e.stunden} Std.
+                `;
+                bereich.appendChild(div);
+            });
+        });
 }
+
+document.addEventListener('DOMContentLoaded', ladeEinsaetze);
