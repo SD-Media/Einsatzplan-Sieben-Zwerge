@@ -1,4 +1,4 @@
-// main.js (neu, angepasst an Google Sheet Objektstruktur)
+// main.js (überarbeitet: Einsatzanzeige mit interaktiven Helferfeldern)
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 const ADMIN_PASSWORT = 'SiebenZwerge';
@@ -64,14 +64,49 @@ function zeigeEinsaetze(daten) {
     if (!bereich) return;
     bereich.innerHTML = '';
 
-    daten.forEach(e => {
+    daten.forEach((e, einsatzIndex) => {
         const div = document.createElement('div');
         div.className = 'einsatz-box';
+
+        const helferHTML = [];
+        for (let i = 1; i <= 10; i++) {
+            const feldName = 'Helfer' + i;
+            const name = e[feldName]?.trim() || '';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = name;
+            input.placeholder = 'Name eintragen...';
+            input.className = name ? 'helfer-input filled' : 'helfer-input';
+            input.dataset.einsatzId = e.ID;
+            input.dataset.index = i - 1;
+
+            input.addEventListener('change', () => {
+                const neuerName = input.value.trim();
+                if (!neuerName) return;
+
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'setHelfer',
+                        id: e.ID,
+                        index: i - 1,
+                        name: neuerName
+                    }),
+                    headers: { 'Content-Type': 'application/json' }
+                }).then(() => ladeEinsaetze());
+            });
+            helferHTML.push(input);
+        }
+
         div.innerHTML = `
-            <strong>${e.Arbeitseinsatz}</strong><br>
-            ${e.Datum || '-'} um ${e.Einsatzzeit || '-'}<br>
-            ${e.Verantwortliche || '-'} – ${e.Punkte || 0} Std. – ${e['Benötigte Helfer'] || 0} Helfer
+            <div><strong>${e.Arbeitseinsatz}</strong></div>
+            <div>${e.Datum || '-'} – ${e.Einsatzzeit || '-'}</div>
+            <div>Verantwortlich: ${e.Verantwortliche || '-'}</div>
+            <div>Kategorie: ${e.Einsatzkategorie || '-'}</div>
+            <div>Punkte: ${e.Punkte || 0} | Helfer: ${e['Benötigte Helfer'] || 0}</div>
         `;
+        helferHTML.forEach(el => div.appendChild(el));
+
         bereich.appendChild(div);
     });
 }
