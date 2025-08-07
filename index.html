@@ -18,27 +18,28 @@
 
         <div id="einsatz-tab" class="tab-content active">
             <h2>Kategorien</h2>
-            <ul>
-                <li>Gartenarbeit</li>
-                <li>Verkaufsaktion</li>
-                <li>Feste</li>
-                <li>Kindergartenpflege</li>
-                <li>Sonstiges</li>
+            <ul class="kategorien">
+                <li class="kategorie garten">Gartenarbeit</li>
+                <li class="kategorie verkauf">Verkaufsaktion</li>
+                <li class="kategorie feste">Feste</li>
+                <li class="kategorie pflege">Kindergartenpflege</li>
+                <li class="kategorie sonstiges">Sonstiges</li>
             </ul>
 
             <h2>Elternübersicht</h2>
-            <div id="parentOverview"></div>
+            <div id="parentOverview">Lade Elternübersicht...</div>
 
-            <input class="name-input" type="text" id="nameInput" placeholder="Geben Sie Ihren Namen ein" />
+            <input class="name-input" type="text" id="nameInput" placeholder="Geben Sie Ihren Namen ein" onkeydown="if(event.key === 'Enter') zeigeEigeneEinsaetze()" />
             <button class="btn btn-primary" onclick="zeigeEigeneEinsaetze()">Meine Einsätze anzeigen</button>
 
             <div id="eigeneEinsaetze"></div>
+            <button class="btn btn-print" onclick="window.print()">Drucken</button>
         </div>
 
         <div id="admin-tab" class="tab-content">
             <h2>Admin-Bereich</h2>
             <p>Bitte geben Sie das Passwort ein:</p>
-            <input class="password-input" type="password" id="adminPasswort" placeholder="Passwort" />
+            <input class="password-input" type="password" id="adminPasswort" placeholder="Passwort" onkeydown="if(event.key === 'Enter') loginAdmin()" />
             <button class="btn btn-primary" onclick="loginAdmin()">Anmelden</button>
 
             <div id="adminArea" style="display:none;">
@@ -51,7 +52,7 @@
                 <input type="number" class="form-input" id="einsatzHelferanzahl" placeholder="Helferanzahl" />
                 <button class="btn btn-success" onclick="addEinsatz()">Einsatz hinzufügen</button>
                 <h3>Alle Einsätze</h3>
-                <div id="alleEinsaetze"></div>
+                <div id="alleEinsaetze">Lade Einsätze...</div>
             </div>
         </div>
     </div>
