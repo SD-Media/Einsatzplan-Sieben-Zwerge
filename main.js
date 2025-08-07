@@ -1,3 +1,5 @@
+// main.js – aktualisiert gemäß neuen Anforderungen
+
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
 const ADMIN_PASSWORT = 'SiebenZwerge';
 
@@ -9,6 +11,11 @@ function showTab(id, event) {
     document.getElementById(id).classList.add('active');
     document.querySelectorAll('.nav-tab').forEach(e => e.classList.remove('active'));
     event.target.classList.add('active');
+}
+
+function togglePasswort() {
+    const input = document.getElementById('adminPasswort');
+    input.type = input.type === 'password' ? 'text' : 'password';
 }
 
 function loginAdmin() {
@@ -37,7 +44,7 @@ function addEinsatz() {
         method: 'POST',
         body: JSON.stringify(daten),
         headers: { 'Content-Type': 'application/json' }
-    }).then(res => res.text()).then(() => ladeEinsaetze());
+    }).then(() => ladeEinsaetze());
 }
 
 function resetAlleHelfer() {
@@ -75,20 +82,21 @@ function zeigeElternUebersicht(daten) {
             }
         }
     });
-
     const tbody = document.getElementById('parentOverview');
     tbody.innerHTML = '';
-    Object.entries(eltern).forEach(([name, ist]) => {
-        const diff = ist - globaleSollPunkte;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${name}</td>
-            <td>${ist}</td>
-            <td>${globaleSollPunkte}</td>
-            <td class="${diff >= 0 ? 'diff-positive' : 'diff-negative'}">${diff}</td>
-        `;
-        tbody.appendChild(tr);
-    });
+    Object.entries(eltern)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .forEach(([name, ist]) => {
+            const diff = ist - globaleSollPunkte;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${name}</td>
+                <td>${ist}</td>
+                <td>${globaleSollPunkte}</td>
+                <td class="${diff >= 0 ? 'diff-positive' : 'diff-negative'}">${diff}</td>
+            `;
+            tbody.appendChild(tr);
+        });
 }
 
 function zeigeEigeneEinsaetze() {
@@ -106,7 +114,7 @@ function zeigeEigeneEinsaetze() {
     eigene.forEach(e => {
         punkte += Number(e.Punkte || 0);
         const div = document.createElement('div');
-        div.className = 'einsatz-box';
+        div.className = `einsatz-box einsatz-${e.Einsatzkategorie?.toLowerCase()}`;
         div.innerHTML = `
             <strong>${e.Arbeitseinsatz}</strong><br>
             ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
@@ -127,7 +135,7 @@ function zeigeAlleEinsaetze(daten) {
     bereich.innerHTML = '';
     daten.forEach(e => {
         const div = document.createElement('div');
-        div.className = 'einsatz-box';
+        div.className = `einsatz-box einsatz-${e.Einsatzkategorie?.toLowerCase()}`;
         div.innerHTML = `
             <strong>${e.Arbeitseinsatz}</strong><br>
             ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
@@ -169,18 +177,20 @@ function zeigeAlleEinsaetze(daten) {
 }
 
 function zeigeAdminEinsaetze(daten) {
-    const bereich = document.getElementById('alleEinsaetze');
-    if (!bereich) return;
+    const bereich = document.getElementById('adminEinsaetze');
     bereich.innerHTML = '';
     daten.forEach(e => {
         const div = document.createElement('div');
-        div.className = 'einsatz-box';
+        div.className = `einsatz-box einsatz-${e.Einsatzkategorie?.toLowerCase()}`;
         div.innerHTML = `
             <strong>${e.Arbeitseinsatz}</strong><br>
             ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
             Kategorie: ${e.Einsatzkategorie || '-'}<br>
             Verantwortlich: ${e.Verantwortliche || '-'}<br>
             Punkte: ${e.Punkte || 0} | Helfer: ${e['Benötigte Helfer'] || 0}
+            <br><br>
+            <button class="btn btn-primary">Bearbeiten</button>
+            <button class="btn btn-danger">Löschen</button>
         `;
         bereich.appendChild(div);
     });
