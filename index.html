@@ -52,8 +52,10 @@
         <!-- Tab: Adminbereich -->
         <div id="admin-tab" class="tab-content">
             <h2>Admin-Bereich</h2>
-            <p>Bitte geben Sie das Passwort ein:</p>
-            <input class="password-input" type="password" id="adminPasswort" placeholder="Passwort" onkeydown="if(event.key==='Enter')loginAdmin()" />
+            <p style="margin-bottom: 0.3rem;">Bitte geben Sie das Passwort ein:</p>
+            <input class="password-input" type="password" id="adminPasswort" placeholder="Passwort" style="max-width: 200px;" />
+            <label><input type="checkbox" onclick="togglePasswort()"> Passwort anzeigen</label>
+            <br />
             <button class="btn btn-primary" onclick="loginAdmin()">Anmelden</button>
 
             <div id="adminArea" style="display:none;">
@@ -77,7 +79,7 @@
                 <button class="btn btn-danger" onclick="resetAlleHelfer()">Alle Helfereinträge löschen</button>
 
                 <h3>Vorhandene Einsätze verwalten</h3>
-                <div id="alleEinsaetze">Lade Einsätze...</div>
+                <div id="adminEinsaetze">Lade Einsätze...</div>
             </div>
         </div>
     </div>
