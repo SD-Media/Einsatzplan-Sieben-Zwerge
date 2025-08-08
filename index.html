@@ -36,7 +36,6 @@
     .einsatz-kindergartenpflege { border-left-color: #2196f3 }
     .einsatz-sonstiges { border-left-color: #607d8b }
 
-    /* kompakte Zeile */
     .einsatz-info { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 10px; line-height: 1.4 }
     .einsatz-info > div { white-space: nowrap }
 
@@ -51,7 +50,6 @@
 
     .status-info { font-size: .92em; color: #666; margin-top: 8px }
 
-    /* Admin Login Row */
     .admin-login-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap }
     #adminPasswort { width: 160px; padding: 8px }
     .toggle-wrap { display: flex; align-items: center; gap: 6px; white-space: nowrap; user-select: none }
@@ -59,7 +57,6 @@
     .admin-edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px }
     .admin-actions { display: flex; gap: 8px; flex-wrap: wrap }
 
-    /* Modal (für Bearbeiten und Info) */
     .modal { display: none; position: fixed; z-index: 9999; inset: 0; background: rgba(0,0,0,.5); align-items: center; justify-content: center; padding: 20px }
     .modal-content { background: #fff; border-radius: 12px; max-width: 760px; width: 100%; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,.2) }
     .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px }
@@ -68,7 +65,6 @@
     .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px }
 
-    /* kleine Hilfeknöpfe oben */
     .top-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px }
   </style>
 </head>
@@ -89,6 +85,7 @@
         <button class="btn-primary" onclick="druckeInfo()">Anleitung drucken</button>
       </div>
 
+      <h3 style="margin:0 0 6px 0">Kategorien</h3>
       <div class="kategorien">
         <span class="kategorie gruen">Gartenarbeit</span>
         <span class="kategorie orange">Verkaufsaktion</span>
@@ -200,7 +197,7 @@
           <li>Die Anzeige „x / y Helfer“ zeigt wie viele Plätze schon belegt sind und wie viele noch frei sind</li>
           <li>Türkis markierte Felder sind bereits ausgefüllt leere Felder sind frei</li>
           <li>Achte auf die korrekte Schreibweise deines Namens damit deine Punkte in der Elternübersicht richtig zugeordnet werden</li>
-          <li><strong>Unter dem Reiter „Meine Einsätze“ oben in der Mitte kannst du</strong> gezielt deine eigenen Termine anzeigen und ausdrucken</li>
+          <li>Unter dem Reiter „Meine Einsätze“ kannst du gezielt deine eigenen Termine anzeigen und ausdrucken</li>
         </ul>
       </div>
       <div class="modal-actions">
@@ -221,6 +218,7 @@
     let globaleSollPunkte = 10;
     let isBusyNetwork = false;
     let editContext = { id: null };
+    let refreshTimer = null;
 
     // === Tabs ===
     function showTab(id, event) {
@@ -273,7 +271,6 @@
         });
     }
 
-    // Auto-Refresh alle 15 s, aber nur wenn kein Eingabefeld aktiv ist und keine Modals offen sind und kein Netz-POST läuft
     function canAutoRefresh() {
       if (isBusyNetwork) return false;
       const active = document.activeElement;
@@ -283,13 +280,15 @@
       return !isEditingField && !editOpen && !infoOpen;
     }
     function startAutoRefresh() {
-      setInterval(() => {
-        if (canAutoRefresh()) ladeEinsaetze();
-      }, AUTO_REFRESH_MS);
+      setInterval(() => { if (canAutoRefresh()) ladeEinsaetze(); }, AUTO_REFRESH_MS);
     }
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && canAutoRefresh()) ladeEinsaetze();
     });
+    function scheduleRefresh(delay = 1200) {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => { if (canAutoRefresh()) ladeEinsaetze(); }, delay);
+    }
 
     // === Helpers ===
     function parseDE(s) {
@@ -382,10 +381,24 @@
             input.placeholder = `Helfer ${i + 1}`;
             if (currentHelfer) input.classList.add('filled');
 
+            // Optimistic UI: sofort lokal setzen, Feld kurz sperren, Refresh leicht verzögert
             input.addEventListener('change', function() {
               const newName = this.value.trim();
-              setHelfer(einsatz.ID, i, newName);
+
+              // lokal updaten
+              einsatz[helferKey] = newName;
+              if (newName) this.classList.add('filled'); else this.classList.remove('filled');
+              statusDiv.innerHTML = `Belegt: ${zaehleHelfer(einsatz)} von ${einsatz.helferanzahl} Plätzen`;
+
+              // Netzspeicher
+              this.disabled = true;
+              setHelfer(einsatz.ID, i, newName)
+                .finally(() => {
+                  this.disabled = false;
+                  scheduleRefresh(1200);
+                });
             });
+
             input.addEventListener('input', function() {
               if (this.value.trim()) this.classList.add('filled'); else this.classList.remove('filled');
             });
@@ -536,7 +549,7 @@
       document.getElementById('edit-uhrzeit').value = e.uhrzeit || '';
       document.getElementById('edit-verantwortlich').value = e.verantwortlich || '';
       document.getElementById('edit-kategorie').value =
-        ['Gartenarbeit','Verkaufsaktion','Feste','Kindergartenpflege'].includes(e.kategorie) ? e.kategorie : 'Sonstiges';
+        ['Gartenarbeit','Verkaufsaktion','Feste','Kindergartenpflege','Sonstiges'].includes(e.kategorie) ? e.kategorie : 'Sonstiges';
       document.getElementById('edit-punkte').value = Number(e.Punkte) || 0;
       document.getElementById('edit-anzahl').value = Number(e.helferanzahl) || 0;
       openEditModal();
@@ -570,25 +583,25 @@
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
         .then(r => r.json())
         .then(result => {
-          isBusyNetwork = false;
-          if (result.success) {
-            closeEditModal();
-            ladeEinsaetze();
-          } else {
-            alert('Fehler beim Aktualisieren: ' + (result.message || 'Unbekannter Fehler'));
-          }
+          if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
+          closeEditModal();
+          scheduleRefresh(400);
         })
-        .catch(err => { isBusyNetwork = false; alert('Fehler beim Aktualisieren: ' + err.message); });
+        .catch(err => { alert('Fehler beim Aktualisieren: ' + err.message); })
+        .finally(() => { isBusyNetwork = false; });
     }
 
-    // === Helfer setzen ===
+    // === Helfer setzen (mit Promise für .finally oben) ===
     function setHelfer(einsatzId, helferIndex, name) {
       const data = { action: 'setHelfer', id: String(einsatzId), index: helferIndex, name: name };
       isBusyNetwork = true;
-      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
+      return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
         .then(r => r.json())
-        .then(result => { isBusyNetwork = false; if (result.success) ladeEinsaetze(); else alert('Fehler beim Speichern: ' + (result.message || 'Unbekannter Fehler')) })
-        .catch(err => { isBusyNetwork = false; alert('Fehler beim Speichern: ' + err.message); });
+        .then(result => {
+          if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
+        })
+        .catch(err => { alert('Fehler beim Speichern: ' + err.message); })
+        .finally(() => { isBusyNetwork = false; });
     }
 
     // === Admin: neuen Einsatz anlegen ===
@@ -608,18 +621,17 @@
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
         .then(r => r.json())
         .then(result => {
-          isBusyNetwork = false;
-          if (result.success) {
-            document.getElementById('einsatzTitel').value = '';
-            document.getElementById('einsatzDatum').value = '';
-            document.getElementById('einsatzUhrzeit').value = '';
-            document.getElementById('einsatzVerantwortlich').value = '';
-            document.getElementById('einsatzStunden').value = '';
-            document.getElementById('einsatzHelferanzahl').value = '';
-            ladeEinsaetze();
-          } else alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
+          if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
+          document.getElementById('einsatzTitel').value = '';
+          document.getElementById('einsatzDatum').value = '';
+          document.getElementById('einsatzUhrzeit').value = '';
+          document.getElementById('einsatzVerantwortlich').value = '';
+          document.getElementById('einsatzStunden').value = '';
+          document.getElementById('einsatzHelferanzahl').value = '';
+          scheduleRefresh(400);
         })
-        .catch(err => { isBusyNetwork = false; alert('Fehler beim Erstellen: ' + err.message); });
+        .catch(err => { alert('Fehler: ' + err.message); })
+        .finally(() => { isBusyNetwork = false; });
     }
 
     // === Admin: löschen ===
@@ -628,11 +640,14 @@
       isBusyNetwork = true;
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteEinsatz', adminPassword: ADMIN_PASS, id: String(id) }) })
         .then(r => r.json())
-        .then(result => { isBusyNetwork = false; if (result.success) ladeEinsaetze(); else alert('Fehler: ' + (result.message || 'Unbekannter Fehler')) })
-        .catch(err => { isBusyNetwork = false; alert('Fehler beim Löschen: ' + err.message); });
+        .then(result => {
+          if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
+          scheduleRefresh(400);
+        })
+        .catch(err => { alert('Fehler: ' + err.message); })
+        .finally(() => { isBusyNetwork = false; });
     }
 
-    // === Helfer zählen ===
     function zaehleHelfer(einsatz) {
       let count = 0;
       for (let i = 1; i <= 10; i++) if (einsatz[`Helfer${i}`] && einsatz[`Helfer${i}`].trim()) count++;
