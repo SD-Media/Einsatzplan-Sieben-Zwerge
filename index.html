@@ -2,288 +2,183 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Einsatzverwaltung</title>
+  <title>Arbeitseinsätze</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #f0f4f8; color: #333; }
-    .container { max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    h1, h2, h3 { margin-top: 1.5rem; margin-bottom: 1rem; }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-    .nav-tab { background: #ddd; padding: 10px 20px; border-radius: 8px 8px 0 0; border: none; cursor: pointer; font-weight: bold; }
-    .nav-tab.active { background: #fff; border-bottom: 2px solid white; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .kategorien { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-    .kategorie { padding: 6px 12px; border-radius: 20px; color: white; font-weight: bold; }
-    .gruen { background: #4caf50; }
-    .orange { background: #ff9800; }
-    .lila { background: #9c27b0; }
-    .blau { background: #2196f3; }
-    .grau { background: #607d8b; }
-    .uebersicht { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    .uebersicht th, .uebersicht td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    .uebersicht th { background: #2196f3; color: white; }
-    .diff-positive { color: green; font-weight: bold; }
-    .diff-negative { color: red; font-weight: bold; }
-    input[type=password]#adminPasswort { width: auto; max-width: 200px; display: inline-block; }
-    label > input[type=checkbox] { display: inline-block; width: auto; margin-left: 5px; }
-    input, select { display: block; width: 100%; margin-bottom: 10px; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-    button { padding: 10px 20px; margin: 5px 0 15px 0; font-size: 1rem; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    button:hover { opacity: 0.9; }
-    .btn-danger { background-color: #f44336; color: white; }
-    .btn-primary { background-color: #2196f3; color: white; }
-    .einsatz-box { border-left: 10px solid #ccc; background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
-    .einsatz-gartenarbeit { border-left-color: #4caf50; }
-    .einsatz-verkaufsaktion { border-left-color: #ff9800; }
-    .einsatz-feste { border-left-color: #9c27b0; }
-    .einsatz-kindergartenpflege { border-left-color: #2196f3; }
-    .einsatz-sonstiges { border-left-color: #607d8b; }
-    .helfer-input { display: inline-block; margin: 5px; padding: 6px 10px; border-radius: 5px; border: 2px solid #f44336; min-width: 150px; font-size: 1rem; }
-    .helfer-input.filled { background-color: #e0f7fa; border-color: #4caf50; }
-    #nameInput { max-width: 300px; }
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #f0f4f8; color: #333 }
+    .container { max-width:1200px; margin:20px auto; padding:20px; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1) }
+    .tabs { display:flex; gap:10px; margin-bottom:20px }
+    .nav-tab { background:#ddd; padding:10px 20px; border-radius:8px 8px 0 0; cursor:pointer; font-weight:bold; border:none }
+    .nav-tab.active { background:#fff; border-bottom:2px solid #fff }
+    .tab-content { display:none }
+    .tab-content.active { display:block }
+    .uebersicht th, .uebersicht td { border:1px solid #ccc; padding:8px; text-align:center }
+    .uebersicht th { background:#2196f3; color:white }
+    .diff-positive { color:green; font-weight:bold }
+    .diff-negative { color:red; font-weight:bold }
+    input, select, button { width:100%; margin-bottom:10px; padding:10px; font-size:1rem; box-sizing:border-box }
+    button.btn-primary { background:#2196f3; color:white; border:none; border-radius:5px; cursor:pointer; }
+    button.btn-danger { background:#f44336; color:white; border:none; border-radius:5px; cursor:pointer; }
+    .einsatz-box { border-left:10px solid #ccc; background:#f9f9f9; padding:15px; margin-bottom:15px; border-radius:8px }
+    .einsatz-gartenarbeit { border-left-color:#4caf50 }
+    .einsatz-verkaufsaktion { border-left-color:#ff9800 }
+    .einsatz-feste { border-left-color:#9c27b0 }
+    .einsatz-kindergartenpflege { border-left-color:#2196f3 }
+    .einsatz-sonstiges { border-left-color:#607d8b }
+    .helfer-input { display:inline-block; margin:5px; padding:6px 10px; border:2px solid #f44336; border-radius:5px; min-width:150px; }
+    .helfer-input.filled { background:#e0f7fa; border-color:#4caf50 }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Arbeitseinsätze Waldorfkindergarten Sieben Zwerge</h1>
-
     <div class="tabs">
       <button class="nav-tab active" onclick="showTab('einsatzTab', event)">Einsätze</button>
       <button class="nav-tab" onclick="showTab('adminTab', event)">Admin</button>
     </div>
-
     <div id="einsatzTab" class="tab-content active">
-      <div class="kategorien">
-        <span class="kategorie gruen">Gartenarbeit</span>
-        <span class="kategorie orange">Verkaufsaktion</span>
-        <span class="kategorie lila">Feste</span>
-        <span class="kategorie blau">Kindergartenpflege</span>
-        <span class="kategorie grau">Sonstiges</span>
-      </div>
-
       <h2>Elternübersicht</h2>
       <table class="uebersicht">
-        <thead>
-          <tr><th>Name</th><th>IST-Punkte</th><th>SOLL-Punkte</th><th>Differenz</th></tr>
-        </thead>
+        <thead><tr><th>Name</th><th>IST-Punkte</th><th>SOLL-Punkte</th><th>Differenz</th></tr></thead>
         <tbody id="parentOverview"></tbody>
       </table>
-
-      <div class="eigene-einsaetze">
-        <input id="nameInput" placeholder="Geben Sie Ihren Namen ein...">
-        <button class="btn-primary" onclick="zeigeEigeneEinsaetze()">Meine Einsätze anzeigen</button>
-      </div>
+      <input id="nameInput" placeholder="Geben Sie Ihren Namen ein...">
+      <button class="btn-primary" onclick="zeigeEigeneEinsaetze()">Meine Einsätze anzeigen</button>
       <div id="eigeneEinsaetze"></div>
       <div id="einsatzListe"></div>
     </div>
-
     <div id="adminTab" class="tab-content">
-      <p>Bitte geben Sie das Passwort ein:</p>
-      <input id="adminPasswort" type="password">
-      <button onclick="loginAdmin()">Anmelden</button>
-      <label>Passwort anzeigen<input type="checkbox" onclick="togglePasswort()"></label>
-
+      <input id="adminPasswort" type="password" placeholder="Admin Pass">
+      <button class="btn-primary" onclick="loginAdmin()">Anmelden</button>
       <div id="adminArea" style="display:none">
         <h2>Neuen Einsatz erstellen</h2>
         <input id="einsatzTitel" placeholder="Einsatzname">
-        <input id="einsatzDatum" placeholder="Datum (TT.MM.JJJJ)">
+        <input id="einsatzDatum" placeholder="Datum">
         <input id="einsatzUhrzeit" placeholder="Uhrzeit">
         <input id="einsatzVerantwortlich" placeholder="Verantwortlicher">
         <select id="einsatzKategorie">
-          <option value="Gartenarbeit">Gartenarbeit</option>
-          <option value="Verkaufsaktion">Verkaufsaktion</option>
-          <option value="Feste">Feste</option>
-          <option value="Kindergartenpflege">Kindergartenpflege</option>
-          <option value="Sonstiges">Sonstiges</option>
+          <option>Gartenarbeit</option><option>Verkaufsaktion</option><option>Feste</option>
+          <option>Kindergartenpflege</option><option>Sonstiges</option>
         </select>
         <input id="einsatzStunden" placeholder="Punkte">
         <input id="einsatzHelferanzahl" placeholder="Helferanzahl">
-        <button onclick="addEinsatz()">Einsatz erstellen</button>
-
-        <h3>Helfereintragungen verwalten</h3>
+        <button class="btn-primary" onclick="addEinsatz()">Einsatz erstellen</button>
         <button class="btn-danger" onclick="resetAlleHelfer()">Alle Helfereinträge löschen</button>
-
-        <h3>Vorhandene Einsätze verwalten</h3>
         <div id="adminEinsaetze"></div>
       </div>
     </div>
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
-    const ADMIN_PASSWORT = 'SiebenZwerge';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/DEIN_DEPLOY_LINK/exec';
+    const ADMIN_PASS = 'SiebenZwerge';
     let globaleDaten = [], globaleSollPunkte = 10;
 
-    function showTab(id, event) {
+    function showTab(id, ev) {
       document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
       document.getElementById(id).classList.add('active');
-      document.querySelectorAll('.nav-tab').forEach(e => e.classList.remove('active'));
-      event.target.classList.add('active');
-    }
-
-    function togglePasswort() {
-      const input = document.getElementById('adminPasswort');
-      input.type = input.type === 'password' ? 'text' : 'password';
+      document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+      ev.target.classList.add('active');
     }
 
     function loginAdmin() {
-      if (document.getElementById('adminPasswort').value === ADMIN_PASSWORT) {
-        document.getElementById('adminArea').style.display = 'block';
-        ladeEinsaetze();
-      } else {
-        alert('Falsches Passwort');
-      }
+      if (adminPasswort.value !== ADMIN_PASS) { alert('Falsches Passwort'); return; }
+      adminArea.style.display = 'block';
+      ladeEinsaetze();
     }
 
     function ladeEinsaetze() {
       fetch(SCRIPT_URL)
-        .then(res => res.json())
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
         .then(json => {
           globaleDaten = json.data;
           globaleSollPunkte = json.sollPunkte;
-          zeigeElternUebersicht(globaleDaten);
+          zeigeElternUebersicht();
           zeigeEigeneEinsaetze();
           zeigeEinsaetzeFuerEltern();
-          zeigeAdminEinsaetze(globaleDaten);
-        });
+          zeigeAdminEinsaetze();
+        })
+        .catch(err => alert('Ladefehler ' + err));
     }
 
-    function zeigeElternUebersicht(daten) {
+    function zeigeElternUebersicht() {
       const eltern = {};
-      daten.forEach(e => {
-        for (let k in e) {
-          if (k.startsWith('Helfer') && e[k]) {
-            const name = e[k].trim();
-            eltern[name] = (eltern[name] || 0) + Number(e.Punkte || 0);
-          }
+      globaleDaten.forEach(e => Object.keys(e).forEach(k => {
+        if (k.startsWith('Helfer') && e[k]) {
+          const n = e[k].trim();
+          eltern[n] = (eltern[n] || 0) + Number(e.Punkte || 0);
         }
+      }));
+      parentOverview.innerHTML = '';
+      Object.entries(eltern).sort((a,b) => a[0].localeCompare(b[0])).forEach(([n,i]) => {
+        const diff = i - globaleSollPunkte;
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${n}</td><td>${i}</td><td>${globaleSollPunkte}</td><td class="${diff>=0?'diff-positive':'diff-negative'}">${diff}</td>`;
+        parentOverview.appendChild(tr);
       });
-      const tbody = document.getElementById('parentOverview');
-      tbody.innerHTML = '';
-      Object.entries(eltern).sort((a,b) => a[0].localeCompare(b[0]))
-        .forEach(([name, ist]) => {
-          const diff = ist - globaleSollPunkte;
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${name}</td><td>${ist}</td><td>${globaleSollPunkte}</td><td class="${diff>=0?'diff-positive':'diff-negative'}">${diff}</td>`;
-          tbody.appendChild(tr);
-        });
     }
 
     function zeigeEinsaetzeFuerEltern() {
-      const bereich = document.getElementById('einsatzListe');
-      bereich.innerHTML = '';
-      const name = document.getElementById('nameInput').value.trim();
-
+      einsatzListe.innerHTML = '';
+      const name = nameInput.value.trim();
       globaleDaten.forEach(e => {
-        const cls = `einsatz-${e.Einsatzkategorie?.toLowerCase().replace(/\s+/g, '')}`;
         const div = document.createElement('div');
+        const cls = `einsatz-${e.kategorie?.toLowerCase().replace(/\s+/g,'')}`;
         div.className = `einsatz-box ${cls}`;
-        div.innerHTML = `
-          <strong>${e.Arbeitseinsatz}</strong><br>
-          ${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>
-          Verantwortlich: ${e["Verantwortliche*r"] || '-'}<br>
-          Kategorie: ${e.Einsatzkategorie || '-'}<br>
-          Helferplätze: ${zaehleHelfer(e)} / ${e["Benötigte Helfer"]}
-        `;
-
-        const helferContainer = document.createElement('div');
-        helferContainer.style.marginTop = '10px';
-
-        for (let i = 0; i < e["Benötigte Helfer"]; i++) {
-          const feldName = `Helfer${i + 1}`;
+        div.innerHTML = `<strong>${e.name}</strong><br>${e.datum || '-'} – ${e.uhrzeit || '-'}<br>Verantwortlich: ${e.verantwortlich || '-'}<br>Kategorie: ${e.kategorie || '-'}<br>Helferplätze: ${zaehleHelfer(e)}/${e.helferanzahl}`;
+        for (let i = 0; i < e.helferanzahl; i++) {
           const input = document.createElement('input');
           input.className = 'helfer-input';
-          input.value = e[feldName] || '';
-          input.disabled = !!e[feldName] && e[feldName] !== name;
-          if (input.value.trim() !== '') input.classList.add('filled');
-
+          input.value = e[`Helfer${i+1}`] || '';
+          if (input.value && input.value !== name) input.disabled = true;
+          if (input.value) input.classList.add('filled');
           input.addEventListener('change', () => {
-            const neuerWert = input.value.trim();
-            fetch(SCRIPT_URL, {
-              method: 'POST',
-              body: JSON.stringify({
-                action: 'setHelfer',
-                id: e.ID,
-                index: i,
-                name: neuerWert
-              }),
-              headers: { 'Content-Type': 'application/json' }
-            }).then(() => ladeEinsaetze());
+            fetch(SCRIPT_URL, {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({action:'setHelfer',id:e.ID,index:i,name:input.value.trim()})})
+              .then(r=>r.json()).then(j=> j.success ? ladeEinsaetze() : alert('Error:'+j.message))
+              .catch(err=>alert('Speicherfehler:'+err));
           });
-
-          helferContainer.appendChild(input);
+          div.appendChild(input);
         }
-
-        div.appendChild(helferContainer);
-        bereich.appendChild(div);
+        einsatzListe.appendChild(div);
       });
-    }
-
-    function zaehleHelfer(e) {
-      let count = 0;
-      for (let i = 1; i <= 10; i++) {
-        if (e[`Helfer${i}`]?.trim()) count++;
-      }
-      return count;
     }
 
     function zeigeEigeneEinsaetze() {
-      const name = document.getElementById('nameInput').value.trim();
+      eigeneEinsaetze.innerHTML = '';
+      const name = nameInput.value.trim();
       if (!name) return;
-      const eigene = globaleDaten.filter(e => Object.keys(e).some(k => k.startsWith('Helfer') && e[k]?.trim() === name));
-      const bereich = document.getElementById('eigeneEinsaetze');
-      bereich.innerHTML = '';
-      let punkte = 0;
-      eigene.forEach(e => {
-        punkte += Number(e.Punkte || 0);
-        const cls = `einsatz-${e.Einsatzkategorie?.toLowerCase().replace(/\s+/g, '')}`;
+      let sum=0;
+      globaleDaten.filter(e=>Object.values(e).includes(name)).forEach(e=>{ sum+=Number(e.Punkte||0); const div=document.createElement('div'); div.className='einsatz-box'; div.innerText=`${e.name} – ${e.datum} – ${e.punkte} Punkte`; eigeneEinsaetze.appendChild(div)});
+      eigeneEinsaetze.innerHTML += `<div><strong>Gesammelte Punkte: ${sum} / ${globaleSollPunkte} (Diff: ${sum-globaleSollPunkte})</strong></div>`;
+    }
+
+    function zeigeAdminEinsaetze() {
+      adminEinsaetze.innerHTML = '';
+      globaleDaten.forEach(e => {
         const div = document.createElement('div');
-        div.className = `einsatz-box ${cls}`;
-        div.innerHTML = `<strong>${e.Arbeitseinsatz}</strong><br>${e.Datum || '-'} – ${e.Einsatzzeit || '-'}<br>Verantwortlich: ${e["Verantwortliche*r"] || '-'}<br>Kategorie: ${e.Einsatzkategorie || '-'}`;
-        bereich.appendChild(div);
+        div.className='einsatz-box';
+        div.innerText = `${e.name} — ${e.datum} — ${e.uhrzeit}`;
+        adminEinsaetze.appendChild(div);
       });
-      const summary = document.createElement('div');
-      summary.innerHTML = `<strong>Gesammelte Punkte: ${punkte} / ${globaleSollPunkte} (Differenz: ${punkte - globaleSollPunkte})</strong>`;
-      bereich.appendChild(summary);
     }
 
     function addEinsatz() {
-      const daten = {
-        action: 'addEinsatz',
-        adminPassword: ADMIN_PASSWORT,
-        name: document.getElementById('einsatzTitel').value,
-        datum: document.getElementById('einsatzDatum').value,
-        uhrzeit: document.getElementById('einsatzUhrzeit').value,
-        verantwortlich: document.getElementById('einsatzVerantwortlich').value,
-        kategorie: document.getElementById('einsatzKategorie').value,
-        punkte: Number(document.getElementById('einsatzStunden').value),
-        helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value)
+      const d = {
+        action:'addEinsatz',adminPassword:ADMIN_PASS,
+        name:einsatzTitel.value,datum:einsatzDatum.value,uhrzeit:einsatzUhrzeit.value,
+        verantwortlich:einsatzVerantwortlich.value,kategorie:einsatzKategorie.value,
+        punkte:Number(einsatzStunden.value),helferanzahl:Number(einsatzHelferanzahl.value)
       };
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(daten),
-        headers: { 'Content-Type': 'application/json' }
-      }).then(() => { alert('Einsatz erfolgreich gespeichert.'); ladeEinsaetze(); });
+      fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})
+        .then(r=>r.json()).then(j=> j.success? ladeEinsaetze():alert('Error:'+j.message));
     }
 
     function resetAlleHelfer() {
-      if (!confirm("Alle Helfereinträge wirklich löschen?")) return;
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'removeAllHelfer', adminPassword: ADMIN_PASSWORT }),
-        headers: { 'Content-Type': 'application/json' }
-      }).then(() => ladeEinsaetze());
+      if (!confirm('Alle Helfer löschen?')) return;
+      fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'removeAllHelfer', adminPassword:ADMIN_PASS})})
+        .then(r=>r.json()).then(j=> j.success? ladeEinsaetze():alert('Error:'+j.message));
     }
 
-    function zeigeAdminEinsaetze(daten) {
-      const area = document.getElementById('adminEinsaetze');
-      area.innerHTML = '';
-      daten.forEach(e => {
-        const div = document.createElement('div');
-        div.className = 'einsatz-box';
-        div.innerHTML = `${e.Arbeitseinsatz} — ${e.Datum} — ${e.Einsatzzeit}`;
-        area.appendChild(div);
-      });
-    }
+    function zaehleHelfer(e) { let c=0; for(let i=1;i<=10;i++){ if(e[`Helfer${i}`]) c++; } return c; }
 
     document.addEventListener('DOMContentLoaded', ladeEinsaetze);
   </script>
