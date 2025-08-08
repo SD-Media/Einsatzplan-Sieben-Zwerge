@@ -4,183 +4,656 @@
   <meta charset="UTF-8">
   <title>Arbeitseinsätze</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #f0f4f8; color: #333 }
-    .container { max-width:1200px; margin:20px auto; padding:20px; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1) }
-    .tabs { display:flex; gap:10px; margin-bottom:20px }
-    .nav-tab { background:#ddd; padding:10px 20px; border-radius:8px 8px 0 0; cursor:pointer; font-weight:bold; border:none }
-    .nav-tab.active { background:#fff; border-bottom:2px solid #fff }
-    .tab-content { display:none }
-    .tab-content.active { display:block }
-    .uebersicht th, .uebersicht td { border:1px solid #ccc; padding:8px; text-align:center }
-    .uebersicht th { background:#2196f3; color:white }
-    .diff-positive { color:green; font-weight:bold }
-    .diff-negative { color:red; font-weight:bold }
-    input, select, button { width:100%; margin-bottom:10px; padding:10px; font-size:1rem; box-sizing:border-box }
-    button.btn-primary { background:#2196f3; color:white; border:none; border-radius:5px; cursor:pointer; }
-    button.btn-danger { background:#f44336; color:white; border:none; border-radius:5px; cursor:pointer; }
-    .einsatz-box { border-left:10px solid #ccc; background:#f9f9f9; padding:15px; margin-bottom:15px; border-radius:8px }
-    .einsatz-gartenarbeit { border-left-color:#4caf50 }
-    .einsatz-verkaufsaktion { border-left-color:#ff9800 }
-    .einsatz-feste { border-left-color:#9c27b0 }
-    .einsatz-kindergartenpflege { border-left-color:#2196f3 }
-    .einsatz-sonstiges { border-left-color:#607d8b }
-    .helfer-input { display:inline-block; margin:5px; padding:6px 10px; border:2px solid #f44336; border-radius:5px; min-width:150px; }
-    .helfer-input.filled { background:#e0f7fa; border-color:#4caf50 }
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      background: #f0f4f8; 
+      color: #333; 
+    }
+    .container { 
+      max-width: 1200px; 
+      margin: 20px auto; 
+      padding: 20px; 
+      background: white; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    }
+    .tabs { 
+      display: flex; 
+      gap: 10px; 
+      margin-bottom: 20px; 
+    }
+    .nav-tab { 
+      background: #ddd; 
+      padding: 10px 20px; 
+      border-radius: 8px 8px 0 0; 
+      cursor: pointer; 
+      font-weight: bold; 
+      border: none; 
+    }
+    .nav-tab.active { 
+      background: #fff; 
+      border-bottom: 2px solid #fff; 
+    }
+    .tab-content { 
+      display: none; 
+    }
+    .tab-content.active { 
+      display: block; 
+    }
+    .kategorien { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 10px; 
+      margin-bottom: 20px; 
+    }
+    .kategorie { 
+      padding: 6px 12px; 
+      border-radius: 20px; 
+      color: white; 
+      font-weight: bold; 
+    }
+    .gruen { background: #4caf50; }
+    .orange { background: #ff9800; }
+    .lila { background: #9c27b0; }
+    .blau { background: #2196f3; }
+    .grau { background: #607d8b; }
+    .uebersicht { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-bottom: 20px; 
+    }
+    .uebersicht th, .uebersicht td { 
+      border: 1px solid #ccc; 
+      padding: 8px; 
+      text-align: center; 
+    }
+    .uebersicht th { 
+      background: #2196f3; 
+      color: white; 
+    }
+    .diff-positive { 
+      color: green; 
+      font-weight: bold; 
+    }
+    .diff-negative { 
+      color: red; 
+      font-weight: bold; 
+    }
+    input, select, button { 
+      width: 100%; 
+      margin-bottom: 10px; 
+      padding: 10px; 
+      font-size: 1rem; 
+      box-sizing: border-box; 
+      border: 1px solid #ccc; 
+      border-radius: 5px; 
+    }
+    button.btn-primary { 
+      background: #2196f3; 
+      color: white; 
+      border: none; 
+      border-radius: 5px; 
+      cursor: pointer; 
+      font-weight: bold; 
+    }
+    button.btn-danger { 
+      background: #f44336; 
+      color: white; 
+      border: none; 
+      border-radius: 5px; 
+      cursor: pointer; 
+      font-weight: bold; 
+    }
+    button:hover { 
+      opacity: 0.9; 
+    }
+    .einsatz-box { 
+      border-left: 10px solid #ccc; 
+      background: #f9f9f9; 
+      padding: 15px; 
+      margin-bottom: 15px; 
+      border-radius: 8px; 
+    }
+    .einsatz-gartenarbeit { 
+      border-left-color: #4caf50; 
+    }
+    .einsatz-verkaufsaktion { 
+      border-left-color: #ff9800; 
+    }
+    .einsatz-feste { 
+      border-left-color: #9c27b0; 
+    }
+    .einsatz-kindergartenpflege { 
+      border-left-color: #2196f3; 
+    }
+    .einsatz-sonstiges { 
+      border-left-color: #607d8b; 
+    }
+    .helfer-input { 
+      display: inline-block; 
+      margin: 5px; 
+      padding: 6px 10px; 
+      border: 2px solid #f44336; 
+      border-radius: 5px; 
+      min-width: 150px; 
+      font-size: 1rem;
+      width: auto;
+    }
+    .helfer-input.filled { 
+      background: #e0f7fa; 
+      border-color: #4caf50; 
+    }
+    .helfer-input:disabled {
+      background: #f0f0f0;
+      color: #666;
+    }
+    .helfer-section {
+      margin-top: 15px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 5px;
+    }
+    .helfer-section h4 {
+      margin: 0 0 10px 0;
+      color: #555;
+    }
+    .name-input-section {
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+    #nameInput {
+      max-width: 300px;
+    }
+    .einsatz-info {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .einsatz-info strong {
+      color: #2196f3;
+    }
+    .status-info {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Arbeitseinsätze Waldorfkindergarten Sieben Zwerge</h1>
+    
     <div class="tabs">
       <button class="nav-tab active" onclick="showTab('einsatzTab', event)">Einsätze</button>
       <button class="nav-tab" onclick="showTab('adminTab', event)">Admin</button>
     </div>
+
     <div id="einsatzTab" class="tab-content active">
+      <!-- Kategorien-Legende -->
+      <div class="kategorien">
+        <span class="kategorie gruen">Gartenarbeit</span>
+        <span class="kategorie orange">Verkaufsaktion</span>
+        <span class="kategorie lila">Feste</span>
+        <span class="kategorie blau">Kindergartenpflege</span>
+        <span class="kategorie grau">Sonstiges</span>
+      </div>
+
       <h2>Elternübersicht</h2>
       <table class="uebersicht">
-        <thead><tr><th>Name</th><th>IST-Punkte</th><th>SOLL-Punkte</th><th>Differenz</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>IST-Punkte</th>
+            <th>SOLL-Punkte</th>
+            <th>Differenz</th>
+          </tr>
+        </thead>
         <tbody id="parentOverview"></tbody>
       </table>
-      <input id="nameInput" placeholder="Geben Sie Ihren Namen ein...">
-      <button class="btn-primary" onclick="zeigeEigeneEinsaetze()">Meine Einsätze anzeigen</button>
+
+      <div class="name-input-section">
+        <input id="nameInput" placeholder="Geben Sie Ihren Namen ein...">
+        <button class="btn-primary" onclick="zeigeEigeneEinsaetze()">Meine Einsätze anzeigen</button>
+      </div>
+      
       <div id="eigeneEinsaetze"></div>
+
+      <h2>Alle verfügbaren Einsätze</h2>
       <div id="einsatzListe"></div>
     </div>
+
     <div id="adminTab" class="tab-content">
-      <input id="adminPasswort" type="password" placeholder="Admin Pass">
+      <h2>Admin-Anmeldung</h2>
+      <input id="adminPasswort" type="password" placeholder="Admin Passwort">
       <button class="btn-primary" onclick="loginAdmin()">Anmelden</button>
+      
       <div id="adminArea" style="display:none">
         <h2>Neuen Einsatz erstellen</h2>
         <input id="einsatzTitel" placeholder="Einsatzname">
-        <input id="einsatzDatum" placeholder="Datum">
+        <input id="einsatzDatum" placeholder="Datum (TT.MM.JJJJ)">
         <input id="einsatzUhrzeit" placeholder="Uhrzeit">
         <input id="einsatzVerantwortlich" placeholder="Verantwortlicher">
         <select id="einsatzKategorie">
-          <option>Gartenarbeit</option><option>Verkaufsaktion</option><option>Feste</option>
-          <option>Kindergartenpflege</option><option>Sonstiges</option>
+          <option value="Gartenarbeit">Gartenarbeit</option>
+          <option value="Verkaufsaktion">Verkaufsaktion</option>
+          <option value="Feste">Feste</option>
+          <option value="Kindergartenpflege">Kindergartenpflege</option>
+          <option value="Sonstiges">Sonstiges</option>
         </select>
-        <input id="einsatzStunden" placeholder="Punkte">
-        <input id="einsatzHelferanzahl" placeholder="Helferanzahl">
+        <input id="einsatzStunden" placeholder="Punkte" type="number">
+        <input id="einsatzHelferanzahl" placeholder="Helferanzahl" type="number">
         <button class="btn-primary" onclick="addEinsatz()">Einsatz erstellen</button>
+        
+        <h3>Verwaltungsaktionen</h3>
         <button class="btn-danger" onclick="resetAlleHelfer()">Alle Helfereinträge löschen</button>
+        
+        <h3>Vorhandene Einsätze</h3>
         <div id="adminEinsaetze"></div>
       </div>
     </div>
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/DEIN_DEPLOY_LINK/exec';
+    // WICHTIG: Hier muss die korrekte URL des Google Apps Script eingetragen werden!
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
     const ADMIN_PASS = 'SiebenZwerge';
-    let globaleDaten = [], globaleSollPunkte = 10;
+    let globaleDaten = [];
+    let globaleSollPunkte = 10;
 
-    function showTab(id, ev) {
-      document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+    function showTab(id, event) {
+      // Alle Tab-Inhalte ausblenden
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      
+      // Gewählten Tab anzeigen
       document.getElementById(id).classList.add('active');
-      document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
-      ev.target.classList.add('active');
+      
+      // Alle Tab-Buttons deaktivieren
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Geklickten Tab-Button aktivieren
+      event.target.classList.add('active');
     }
 
     function loginAdmin() {
-      if (adminPasswort.value !== ADMIN_PASS) { alert('Falsches Passwort'); return; }
-      adminArea.style.display = 'block';
+      const passwortInput = document.getElementById('adminPasswort');
+      if (passwortInput.value !== ADMIN_PASS) {
+        alert('Falsches Passwort');
+        return;
+      }
+      
+      document.getElementById('adminArea').style.display = 'block';
       ladeEinsaetze();
+      alert('Erfolgreich als Admin angemeldet!');
     }
 
     function ladeEinsaetze() {
+      console.log('Lade Einsätze von:', SCRIPT_URL);
+      
       fetch(SCRIPT_URL)
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
         .then(json => {
-          globaleDaten = json.data;
-          globaleSollPunkte = json.sollPunkte;
+          console.log('Geladene Daten:', json);
+          globaleDaten = json.data || [];
+          globaleSollPunkte = json.sollPunkte || 10;
+          
           zeigeElternUebersicht();
           zeigeEigeneEinsaetze();
           zeigeEinsaetzeFuerEltern();
           zeigeAdminEinsaetze();
         })
-        .catch(err => alert('Ladefehler ' + err));
+        .catch(error => {
+          console.error('Ladefehler:', error);
+          alert('Fehler beim Laden der Daten: ' + error.message);
+        });
     }
 
     function zeigeElternUebersicht() {
       const eltern = {};
-      globaleDaten.forEach(e => Object.keys(e).forEach(k => {
-        if (k.startsWith('Helfer') && e[k]) {
-          const n = e[k].trim();
-          eltern[n] = (eltern[n] || 0) + Number(e.Punkte || 0);
-        }
-      }));
-      parentOverview.innerHTML = '';
-      Object.entries(eltern).sort((a,b) => a[0].localeCompare(b[0])).forEach(([n,i]) => {
-        const diff = i - globaleSollPunkte;
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${n}</td><td>${i}</td><td>${globaleSollPunkte}</td><td class="${diff>=0?'diff-positive':'diff-negative'}">${diff}</td>`;
-        parentOverview.appendChild(tr);
+      
+      globaleDaten.forEach(einsatz => {
+        Object.keys(einsatz).forEach(key => {
+          if (key.startsWith('Helfer') && einsatz[key]) {
+            const name = einsatz[key].trim();
+            if (name) {
+              eltern[name] = (eltern[name] || 0) + Number(einsatz.Punkte || 0);
+            }
+          }
+        });
       });
+
+      const tbody = document.getElementById('parentOverview');
+      tbody.innerHTML = '';
+      
+      Object.entries(eltern)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .forEach(([name, istPunkte]) => {
+          const differenz = istPunkte - globaleSollPunkte;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${name}</td>
+            <td>${istPunkte}</td>
+            <td>${globaleSollPunkte}</td>
+            <td class="${differenz >= 0 ? 'diff-positive' : 'diff-negative'}">${differenz}</td>
+          `;
+          tbody.appendChild(tr);
+        });
     }
 
     function zeigeEinsaetzeFuerEltern() {
+      const einsatzListe = document.getElementById('einsatzListe');
       einsatzListe.innerHTML = '';
-      const name = nameInput.value.trim();
-      globaleDaten.forEach(e => {
+      
+      if (globaleDaten.length === 0) {
+        einsatzListe.innerHTML = '<p>Keine Einsätze verfügbar.</p>';
+        return;
+      }
+
+      globaleDaten.forEach(einsatz => {
         const div = document.createElement('div');
-        const cls = `einsatz-${e.kategorie?.toLowerCase().replace(/\s+/g,'')}`;
-        div.className = `einsatz-box ${cls}`;
-        div.innerHTML = `<strong>${e.name}</strong><br>${e.datum || '-'} – ${e.uhrzeit || '-'}<br>Verantwortlich: ${e.verantwortlich || '-'}<br>Kategorie: ${e.kategorie || '-'}<br>Helferplätze: ${zaehleHelfer(e)}/${e.helferanzahl}`;
-        for (let i = 0; i < e.helferanzahl; i++) {
-          const input = document.createElement('input');
-          input.className = 'helfer-input';
-          input.value = e[`Helfer${i+1}`] || '';
-          if (input.value && input.value !== name) input.disabled = true;
-          if (input.value) input.classList.add('filled');
-          input.addEventListener('change', () => {
-            fetch(SCRIPT_URL, {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({action:'setHelfer',id:e.ID,index:i,name:input.value.trim()})})
-              .then(r=>r.json()).then(j=> j.success ? ladeEinsaetze() : alert('Error:'+j.message))
-              .catch(err=>alert('Speicherfehler:'+err));
-          });
-          div.appendChild(input);
+        const kategorieClass = `einsatz-${einsatz.kategorie?.toLowerCase().replace(/\s+/g, '')}`;
+        div.className = `einsatz-box ${kategorieClass}`;
+        
+        // Basis-Informationen
+        div.innerHTML = `
+          <div class="einsatz-info">
+            <strong>${einsatz.name || 'Unbenannter Einsatz'}</strong><br>
+            <strong>Datum:</strong> ${einsatz.datum || 'Nicht angegeben'}<br>
+            <strong>Uhrzeit:</strong> ${einsatz.uhrzeit || 'Nicht angegeben'}<br>
+            <strong>Verantwortlich:</strong> ${einsatz.verantwortlich || 'Nicht angegeben'}<br>
+            <strong>Kategorie:</strong> ${einsatz.kategorie || 'Nicht angegeben'}<br>
+            <strong>Punkte:</strong> ${einsatz.Punkte || 0}<br>
+            <strong>Benötigte Helfer:</strong> ${einsatz.helferanzahl || 0}
+          </div>
+        `;
+
+        // Helfer-Eingabefelder hinzufügen
+        if (einsatz.helferanzahl > 0) {
+          const helferSection = document.createElement('div');
+          helferSection.className = 'helfer-section';
+          helferSection.innerHTML = '<h4>Helfer eintragen:</h4>';
+
+          const belegteHelfer = zaehleHelfer(einsatz);
+          const statusDiv = document.createElement('div');
+          statusDiv.className = 'status-info';
+          statusDiv.innerHTML = `Belegt: ${belegteHelfer} von ${einsatz.helferanzahl} Plätzen`;
+          helferSection.appendChild(statusDiv);
+
+          for (let i = 0; i < einsatz.helferanzahl; i++) {
+            const helferKey = `Helfer${i + 1}`;
+            const currentHelfer = einsatz[helferKey] || '';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'helfer-input';
+            input.value = currentHelfer;
+            input.placeholder = `Helfer ${i + 1}`;
+            
+            if (currentHelfer) {
+              input.classList.add('filled');
+            }
+
+            // Event-Listener für Änderungen
+            input.addEventListener('change', function() {
+              const newName = this.value.trim();
+              setHelfer(einsatz.ID, i, newName);
+            });
+
+            // Event-Listener für visuelle Änderungen
+            input.addEventListener('input', function() {
+              if (this.value.trim()) {
+                this.classList.add('filled');
+              } else {
+                this.classList.remove('filled');
+              }
+            });
+
+            helferSection.appendChild(input);
+          }
+
+          div.appendChild(helferSection);
         }
+
         einsatzListe.appendChild(div);
       });
     }
 
+    function setHelfer(einsatzId, helferIndex, name) {
+      const data = {
+        action: 'setHelfer',
+        id: String(einsatzId),
+        index: helferIndex,
+        name: name
+      };
+
+      console.log('Setze Helfer:', data);
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          console.log('Helfer erfolgreich gespeichert');
+          // Daten neu laden, um Übersicht zu aktualisieren
+          ladeEinsaetze();
+        } else {
+          alert('Fehler beim Speichern: ' + (result.message || 'Unbekannter Fehler'));
+        }
+      })
+      .catch(error => {
+        console.error('Speicherfehler:', error);
+        alert('Fehler beim Speichern: ' + error.message);
+      });
+    }
+
     function zeigeEigeneEinsaetze() {
-      eigeneEinsaetze.innerHTML = '';
+      const eigeneEinsaetzeDiv = document.getElementById('eigeneEinsaetze');
+      const nameInput = document.getElementById('nameInput');
       const name = nameInput.value.trim();
-      if (!name) return;
-      let sum=0;
-      globaleDaten.filter(e=>Object.values(e).includes(name)).forEach(e=>{ sum+=Number(e.Punkte||0); const div=document.createElement('div'); div.className='einsatz-box'; div.innerText=`${e.name} – ${e.datum} – ${e.punkte} Punkte`; eigeneEinsaetze.appendChild(div)});
-      eigeneEinsaetze.innerHTML += `<div><strong>Gesammelte Punkte: ${sum} / ${globaleSollPunkte} (Diff: ${sum-globaleSollPunkte})</strong></div>`;
+      
+      if (!name) {
+        eigeneEinsaetzeDiv.innerHTML = '';
+        return;
+      }
+
+      let gesamtPunkte = 0;
+      const eigeneEinsaetze = [];
+
+      globaleDaten.forEach(einsatz => {
+        // Prüfen, ob der Name in einem der Helfer-Felder steht
+        let istHelfer = false;
+        for (let i = 1; i <= 10; i++) {
+          if (einsatz[`Helfer${i}`] && einsatz[`Helfer${i}`].trim() === name) {
+            istHelfer = true;
+            break;
+          }
+        }
+        
+        if (istHelfer) {
+          eigeneEinsaetze.push(einsatz);
+          gesamtPunkte += Number(einsatz.Punkte || 0);
+        }
+      });
+
+      eigeneEinsaetzeDiv.innerHTML = '';
+      
+      if (eigeneEinsaetze.length === 0) {
+        eigeneEinsaetzeDiv.innerHTML = `<div class="einsatz-box"><strong>Keine Einsätze für "${name}" gefunden.</strong></div>`;
+        return;
+      }
+
+      eigeneEinsaetze.forEach(einsatz => {
+        const kategorieClass = `einsatz-${einsatz.kategorie?.toLowerCase().replace(/\s+/g, '')}`;
+        const div = document.createElement('div');
+        div.className = `einsatz-box ${kategorieClass}`;
+        div.innerHTML = `
+          <strong>${einsatz.name}</strong><br>
+          ${einsatz.datum || 'Nicht angegeben'} – ${einsatz.uhrzeit || 'Nicht angegeben'}<br>
+          Verantwortlich: ${einsatz.verantwortlich || 'Nicht angegeben'}<br>
+          Kategorie: ${einsatz.kategorie || 'Nicht angegeben'}<br>
+          Punkte: ${einsatz.Punkte || 0}
+        `;
+        eigeneEinsaetzeDiv.appendChild(div);
+      });
+
+      // Zusammenfassung
+      const differenz = gesamtPunkte - globaleSollPunkte;
+      const summaryDiv = document.createElement('div');
+      summaryDiv.className = 'einsatz-box';
+      summaryDiv.innerHTML = `
+        <strong>Zusammenfassung für "${name}":</strong><br>
+        Gesammelte Punkte: ${gesamtPunkte} / ${globaleSollPunkte}<br>
+        <span class="${differenz >= 0 ? 'diff-positive' : 'diff-negative'}">Differenz: ${differenz}</span>
+      `;
+      eigeneEinsaetzeDiv.appendChild(summaryDiv);
     }
 
     function zeigeAdminEinsaetze() {
-      adminEinsaetze.innerHTML = '';
-      globaleDaten.forEach(e => {
+      const adminEinsaetzeDiv = document.getElementById('adminEinsaetze');
+      
+      if (!document.getElementById('adminArea').style.display || 
+          document.getElementById('adminArea').style.display === 'none') {
+        return;
+      }
+      
+      adminEinsaetzeDiv.innerHTML = '';
+      
+      globaleDaten.forEach(einsatz => {
         const div = document.createElement('div');
-        div.className='einsatz-box';
-        div.innerText = `${e.name} — ${e.datum} — ${e.uhrzeit}`;
-        adminEinsaetze.appendChild(div);
+        div.className = 'einsatz-box';
+        div.innerHTML = `
+          <strong>${einsatz.name}</strong> — ${einsatz.datum} — ${einsatz.uhrzeit}<br>
+          <small>Kategorie: ${einsatz.kategorie}, Punkte: ${einsatz.Punkte}, Helfer: ${zaehleHelfer(einsatz)}/${einsatz.helferanzahl}</small><br>
+          <button class="btn-danger" onclick="deleteEinsatz('${einsatz.ID}')" style="width:auto; margin-top:5px;">Löschen</button>
+        `;
+        adminEinsaetzeDiv.appendChild(div);
       });
     }
 
     function addEinsatz() {
-      const d = {
-        action:'addEinsatz',adminPassword:ADMIN_PASS,
-        name:einsatzTitel.value,datum:einsatzDatum.value,uhrzeit:einsatzUhrzeit.value,
-        verantwortlich:einsatzVerantwortlich.value,kategorie:einsatzKategorie.value,
-        punkte:Number(einsatzStunden.value),helferanzahl:Number(einsatzHelferanzahl.value)
+      const data = {
+        action: 'addEinsatz',
+        adminPassword: ADMIN_PASS,
+        name: document.getElementById('einsatzTitel').value,
+        datum: document.getElementById('einsatzDatum').value,
+        uhrzeit: document.getElementById('einsatzUhrzeit').value,
+        verantwortlich: document.getElementById('einsatzVerantwortlich').value,
+        kategorie: document.getElementById('einsatzKategorie').value,
+        punkte: Number(document.getElementById('einsatzStunden').value),
+        helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value)
       };
-      fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})
-        .then(r=>r.json()).then(j=> j.success? ladeEinsaetze():alert('Error:'+j.message));
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          alert('Einsatz erfolgreich erstellt!');
+          // Felder leeren
+          document.getElementById('einsatzTitel').value = '';
+          document.getElementById('einsatzDatum').value = '';
+          document.getElementById('einsatzUhrzeit').value = '';
+          document.getElementById('einsatzVerantwortlich').value = '';
+          document.getElementById('einsatzStunden').value = '';
+          document.getElementById('einsatzHelferanzahl').value = '';
+          ladeEinsaetze();
+        } else {
+          alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
+        }
+      })
+      .catch(error => {
+        console.error('Fehler beim Erstellen:', error);
+        alert('Fehler beim Erstellen des Einsatzes: ' + error.message);
+      });
     }
 
     function resetAlleHelfer() {
-      if (!confirm('Alle Helfer löschen?')) return;
-      fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'removeAllHelfer', adminPassword:ADMIN_PASS})})
-        .then(r=>r.json()).then(j=> j.success? ladeEinsaetze():alert('Error:'+j.message));
+      if (!confirm('Wirklich alle Helfereinträge löschen?')) {
+        return;
+      }
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'removeAllHelfer',
+          adminPassword: ADMIN_PASS
+        })
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          alert('Alle Helfereinträge wurden gelöscht.');
+          ladeEinsaetze();
+        } else {
+          alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
+        }
+      })
+      .catch(error => {
+        console.error('Fehler beim Löschen:', error);
+        alert('Fehler beim Löschen der Helfereinträge: ' + error.message);
+      });
     }
 
-    function zaehleHelfer(e) { let c=0; for(let i=1;i<=10;i++){ if(e[`Helfer${i}`]) c++; } return c; }
+    function deleteEinsatz(id) {
+      if (!confirm('Einsatz wirklich löschen?')) {
+        return;
+      }
 
-    document.addEventListener('DOMContentLoaded', ladeEinsaetze);
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'deleteEinsatz',
+          adminPassword: ADMIN_PASS,
+          id: String(id)
+        })
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          alert('Einsatz erfolgreich gelöscht!');
+          ladeEinsaetze();
+        } else {
+          alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
+        }
+      })
+      .catch(error => {
+        console.error('Fehler beim Löschen:', error);
+        alert('Fehler beim Löschen des Einsatzes: ' + error.message);
+      });
+    }
+
+    function zaehleHelfer(einsatz) {
+      let count = 0;
+      for (let i = 1; i <= 10; i++) {
+        if (einsatz[`Helfer${i}`] && einsatz[`Helfer${i}`].trim()) {
+          count++;
+        }
+      }
+      return count;
+    }
+
+    // Beim Laden der Seite Daten laden
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Seite geladen, lade Einsätze...');
+      ladeEinsaetze();
+    });
   </script>
 </body>
 </html>
