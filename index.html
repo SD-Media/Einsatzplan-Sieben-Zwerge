@@ -109,6 +109,20 @@
     .einsatz-feste { border-left-color: #9c27b0; }
     .einsatz-kindergartenpflege { border-left-color: #2196f3; }
     .einsatz-sonstiges { border-left-color: #607d8b; }
+
+    /* kompaktere Anzeige der Einsatzdaten */
+    .einsatz-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .einsatz-info > div {
+      white-space: nowrap;
+    }
+
     .helfer-input { 
       display: inline-block; 
       margin: 5px; 
@@ -126,10 +140,8 @@
     .helfer-input:disabled { background: #f0f0f0; color: #666; }
     .helfer-section { margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px; }
     .helfer-section h4 { margin: 0 0 10px 0; color: #555; }
-    .name-input-section { max-width: 400px; margin-bottom: 20px; }
+    .name-input-section { max-width: 420px; margin-bottom: 20px; }
     #nameInput { max-width: 300px; }
-    .einsatz-info { margin-bottom: 10px; line-height: 1.5; }
-    .einsatz-info strong { color: #2196f3; }
     .status-info { font-size: 0.9em; color: #666; margin-top: 10px; }
   </style>
 </head>
@@ -167,6 +179,7 @@
       <div class="name-input-section">
         <input id="nameInput" placeholder="Geben Sie Ihren Namen ein...">
         <button class="btn-primary" onclick="zeigeEigeneEinsaetze()">Meine Einsätze anzeigen</button>
+        <button class="btn-primary" onclick="druckeEigeneEinsaetze()">Diese Ansicht drucken</button>
       </div>
       
       <div id="eigeneEinsaetze"></div>
@@ -303,13 +316,13 @@
         div.className = `einsatz-box ${kategorieClass}`;
         div.innerHTML = `
           <div class="einsatz-info">
-            <strong>${einsatz.name || 'Unbenannter Einsatz'}</strong><br>
-            <strong>Datum:</strong> ${einsatz.datum || 'Nicht angegeben'}<br>
-            <strong>Uhrzeit:</strong> ${einsatz.uhrzeit || 'Nicht angegeben'}<br>
-            <strong>Verantwortlich:</strong> ${einsatz.verantwortlich || 'Nicht angegeben'}<br>
-            <strong>Kategorie:</strong> ${einsatz.kategorie || 'Nicht angegeben'}<br>
-            <strong>Punkte:</strong> ${einsatz.Punkte || 0}<br>
-            <strong>Benötigte Helfer:</strong> ${einsatz.helferanzahl || 0}
+            <div><strong>${einsatz.name || 'Unbenannter Einsatz'}</strong></div>
+            <div><strong>Datum:</strong> ${einsatz.datum || 'Nicht angegeben'}</div>
+            <div><strong>Uhrzeit:</strong> ${einsatz.uhrzeit || 'Nicht angegeben'}</div>
+            <div><strong>Verantwortlich:</strong> ${einsatz.verantwortlich || 'Nicht angegeben'}</div>
+            <div><strong>Kategorie:</strong> ${einsatz.kategorie || 'Nicht angegeben'}</div>
+            <div><strong>Punkte:</strong> ${einsatz.Punkte || 0}</div>
+            <div><strong>Benötigte Helfer:</strong> ${einsatz.helferanzahl || 0}</div>
           </div>
         `;
 
@@ -391,11 +404,12 @@
         const div = document.createElement('div');
         div.className = `einsatz-box ${katClassName(einsatz.kategorie)}`;
         div.innerHTML = `
-          <strong>${einsatz.name}</strong><br>
-          ${einsatz.datum || 'Nicht angegeben'} – ${einsatz.uhrzeit || 'Nicht angegeben'}<br>
-          Verantwortlich: ${einsatz.verantwortlich || 'Nicht angegeben'}<br>
-          Kategorie: ${einsatz.kategorie || 'Nicht angegeben'}<br>
-          Punkte: ${einsatz.Punkte || 0}
+          <div class="einsatz-info">
+            <div><strong>${einsatz.name}</strong></div>
+            <div>${einsatz.datum || 'Nicht angegeben'} – ${einsatz.uhrzeit || 'Nicht angegeben'}</div>
+            <div>Verantwortlich: ${einsatz.verantwortlich || 'Nicht angegeben'}</div>
+            <div>Kategorie: ${einsatz.kategorie || 'Nicht angegeben'}</div>
+          </div>
         `;
         eigeneEinsaetzeDiv.appendChild(div);
       });
@@ -409,6 +423,39 @@
         <span class="${differenz >= 0 ? 'diff-positive' : 'diff-negative'}">Differenz: ${differenz}</span>
       `;
       eigeneEinsaetzeDiv.appendChild(summaryDiv);
+    }
+
+    function druckeEigeneEinsaetze() {
+      const wrap = document.getElementById('eigeneEinsaetze');
+      const inhalt = wrap.innerHTML;
+      if (!inhalt.trim()) {
+        alert('Keine Einsätze zum Drucken vorhanden.');
+        return;
+      }
+      const w = window.open('', '', 'height=900,width=800');
+      w.document.write(`
+        <html>
+          <head>
+            <title>Meine Einsätze</title>
+            <meta charset="UTF-8">
+            <style>
+              body { font-family: 'Segoe UI', sans-serif; color: #000; }
+              h2 { margin-top: 0; }
+              .einsatz-box { border-left: 6px solid #000; background:#fff; padding:12px; margin: 8px 0; }
+              .einsatz-info { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+              .einsatz-info > div { white-space:nowrap; }
+            </style>
+          </head>
+          <body>
+            <h2>Meine Einsätze</h2>
+            ${inhalt}
+          </body>
+        </html>
+      `);
+      w.document.close();
+      w.focus();
+      w.print();
+      w.close();
     }
 
     function zeigeAdminEinsaetze() {
