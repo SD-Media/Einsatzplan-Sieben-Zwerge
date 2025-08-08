@@ -7,9 +7,13 @@
   <style>
     body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 0; background: #f0f4f8; color: #333 }
     .container { max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1) }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap }
-    .nav-tab { background: #ddd; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600; border: none }
+
+    /* TABS: volle Breite, zentriert, gleich breit */
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: nowrap; width: 100%; justify-content: center }
+    .nav-tab { flex: 1 1 0; text-align: center; background: #ddd; padding: 12px 16px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600; border: none }
     .nav-tab.active { background: #fff; border-bottom: 2px solid #fff }
+    @media (max-width: 640px) { .tabs { flex-wrap: wrap } .nav-tab { flex: 1 1 100% } }
+
     .tab-content { display: none }
     .tab-content.active { display: block }
 
@@ -217,8 +221,6 @@
     let globaleDaten = [];
     let globaleSollPunkte = 10;
     let isBusyNetwork = false;
-    let editContext = { id: null };
-    let refreshTimer = null;
 
     // === Tabs ===
     function showTab(id, event) {
@@ -242,16 +244,13 @@
     });
     function loginAdmin() {
       const passwortInput = document.getElementById('adminPasswort');
-      if (passwortInput.value !== ADMIN_PASS) {
-        alert('Falsches Passwort');
-        return;
-      }
+      if (passwortInput.value !== ADMIN_PASS) { alert('Falsches Passwort'); return; }
       document.getElementById('adminArea').style.display = 'block';
       ladeEinsaetze();
       alert('Erfolgreich als Admin angemeldet!');
     }
 
-    // === Daten laden mit Datumssortierung ===
+    // === Daten laden (sortiert nach Datum) ===
     function ladeEinsaetze() {
       return fetch(SCRIPT_URL)
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`); return r.json(); })
@@ -266,29 +265,20 @@
           zeigeEinsaetzeFuerEltern();
           zeigeAdminEinsaetze();
         })
-        .catch(err => {
-          console.error('Ladefehler:', err);
-        });
+        .catch(err => console.error('Ladefehler:', err));
     }
 
+    // Auto-Refresh alle 15 s aber nur wenn nichts editiert wird
     function canAutoRefresh() {
       if (isBusyNetwork) return false;
       const active = document.activeElement;
-      const isEditingField = active && (active.matches('input, textarea, select') || active.isContentEditable);
+      const isEditing = active && (active.matches('input, textarea, select') || active.isContentEditable);
       const editOpen = document.getElementById('editModal').style.display === 'flex';
       const infoOpen = document.getElementById('infoModal').style.display === 'flex';
-      return !isEditingField && !editOpen && !infoOpen;
+      return !isEditing && !editOpen && !infoOpen;
     }
-    function startAutoRefresh() {
-      setInterval(() => { if (canAutoRefresh()) ladeEinsaetze(); }, AUTO_REFRESH_MS);
-    }
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && canAutoRefresh()) ladeEinsaetze();
-    });
-    function scheduleRefresh(delay = 1200) {
-      if (refreshTimer) clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(() => { if (canAutoRefresh()) ladeEinsaetze(); }, delay);
-    }
+    function startAutoRefresh() { setInterval(() => { if (canAutoRefresh()) ladeEinsaetze(); }, AUTO_REFRESH_MS); }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && canAutoRefresh()) ladeEinsaetze(); });
 
     // === Helpers ===
     function parseDE(s) {
@@ -339,10 +329,7 @@
     function zeigeEinsaetzeFuerEltern() {
       const einsatzListe = document.getElementById('einsatzListe');
       einsatzListe.innerHTML = '';
-      if (globaleDaten.length === 0) {
-        einsatzListe.innerHTML = '<p>Keine Einsätze verfügbar.</p>';
-        return;
-      }
+      if (globaleDaten.length === 0) { einsatzListe.innerHTML = '<p>Keine Einsätze verfügbar.</p>'; return; }
 
       globaleDaten.forEach(einsatz => {
         const div = document.createElement('div');
@@ -365,10 +352,9 @@
           helferSection.className = 'helfer-section';
           helferSection.innerHTML = '<h4>Helfer eintragen:</h4>';
 
-          const belegteHelfer = zaehleHelfer(einsatz);
           const statusDiv = document.createElement('div');
           statusDiv.className = 'status-info';
-          statusDiv.innerHTML = `Belegt: ${belegteHelfer} von ${einsatz.helferanzahl} Plätzen`;
+          statusDiv.innerHTML = `Belegt: ${zaehleHelfer(einsatz)} von ${einsatz.helferanzahl} Plätzen`;
           helferSection.appendChild(statusDiv);
 
           for (let i = 0; i < einsatz.helferanzahl; i++) {
@@ -381,25 +367,24 @@
             input.placeholder = `Helfer ${i + 1}`;
             if (currentHelfer) input.classList.add('filled');
 
-            // Optimistic UI: sofort lokal setzen, Feld kurz sperren, Refresh leicht verzögert
-            input.addEventListener('change', function() {
+            // Optimistic UI: sofort sichtbar halten + direkt neu laden nach Erfolg
+            input.addEventListener('change', function () {
               const newName = this.value.trim();
 
-              // lokal updaten
+              // lokal aktualisieren
               einsatz[helferKey] = newName;
               if (newName) this.classList.add('filled'); else this.classList.remove('filled');
               statusDiv.innerHTML = `Belegt: ${zaehleHelfer(einsatz)} von ${einsatz.helferanzahl} Plätzen`;
+              zeigeElternUebersicht(); // Übersicht sofort neu
 
-              // Netzspeicher
+              // speichern
               this.disabled = true;
               setHelfer(einsatz.ID, i, newName)
-                .finally(() => {
-                  this.disabled = false;
-                  scheduleRefresh(1200);
-                });
+                .then(() => ladeEinsaetze()) // danach echte Daten holen
+                .finally(() => { this.disabled = false; });
             });
 
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
               if (this.value.trim()) this.classList.add('filled'); else this.classList.remove('filled');
             });
 
@@ -411,7 +396,7 @@
       });
     }
 
-    // === Meine Einsätze (ohne Kategorie und ohne Punkte) ===
+    // === Meine Einsätze ===
     function zeigeEigeneEinsaetze() {
       const eigeneEinsaetzeDiv = document.getElementById('eigeneEinsaetze');
       const name = document.getElementById('nameInput').value.trim();
@@ -426,10 +411,7 @@
         for (let i = 1; i <= 10; i++) {
           if (einsatz[`Helfer${i}`] && einsatz[`Helfer${i}`].trim() === name) { istHelfer = true; break; }
         }
-        if (istHelfer) {
-          eigeneEinsaetze.push(einsatz);
-          gesamtPunkte += Number(einsatz.Punkte || 0);
-        }
+        if (istHelfer) { eigeneEinsaetze.push(einsatz); gesamtPunkte += Number(einsatz.Punkte || 0); }
       });
 
       if (eigeneEinsaetze.length === 0) {
@@ -461,7 +443,6 @@
       eigeneEinsaetzeDiv.appendChild(summaryDiv);
     }
 
-    // === Schöne Druckansicht für "Meine Einsätze" ===
     function druckeEigeneEinsaetze() {
       const name = document.getElementById('nameInput').value.trim();
       const wrap = document.getElementById('eigeneEinsaetze');
@@ -511,7 +492,7 @@
       w.print();
     }
 
-    // === Adminliste rendern (mit Farbstreifen) ===
+    // === Adminliste ===
     function zeigeAdminEinsaetze() {
       const adminEinsaetzeDiv = document.getElementById('adminEinsaetze');
       if (!document.getElementById('adminArea').style.display || document.getElementById('adminArea').style.display === 'none') return;
@@ -539,7 +520,8 @@
       });
     }
 
-    // === Modal: Einsatz bearbeiten ===
+    // === Edit-Modal ===
+    let editContext = { id: null };
     function startEditEinsatz(id) {
       const e = globaleDaten.find(x => String(x.ID) === String(id));
       if (!e) return;
@@ -554,17 +536,8 @@
       document.getElementById('edit-anzahl').value = Number(e.helferanzahl) || 0;
       openEditModal();
     }
-    function openEditModal() {
-      const m = document.getElementById('editModal');
-      m.style.display = 'flex';
-      m.setAttribute('aria-hidden', 'false');
-    }
-    function closeEditModal() {
-      const m = document.getElementById('editModal');
-      m.style.display = 'none';
-      m.setAttribute('aria-hidden', 'true');
-      editContext.id = null;
-    }
+    function openEditModal() { const m = document.getElementById('editModal'); m.style.display = 'flex'; m.setAttribute('aria-hidden', 'false'); }
+    function closeEditModal() { const m = document.getElementById('editModal'); m.style.display = 'none'; m.setAttribute('aria-hidden', 'true'); editContext.id = null; }
     function saveEdit() {
       if (!editContext.id) return;
       const payload = {
@@ -585,26 +558,24 @@
         .then(result => {
           if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
           closeEditModal();
-          scheduleRefresh(400);
+          return ladeEinsaetze(); // sofort nachziehen
         })
         .catch(err => { alert('Fehler beim Aktualisieren: ' + err.message); })
         .finally(() => { isBusyNetwork = false; });
     }
 
-    // === Helfer setzen (mit Promise für .finally oben) ===
+    // === Helfer speichern ===
     function setHelfer(einsatzId, helferIndex, name) {
       const data = { action: 'setHelfer', id: String(einsatzId), index: helferIndex, name: name };
       isBusyNetwork = true;
       return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
         .then(r => r.json())
-        .then(result => {
-          if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
-        })
+        .then(result => { if (!result.success) throw new Error(result.message || 'Unbekannter Fehler'); })
         .catch(err => { alert('Fehler beim Speichern: ' + err.message); })
         .finally(() => { isBusyNetwork = false; });
     }
 
-    // === Admin: neuen Einsatz anlegen ===
+    // === Admin: anlegen/löschen ===
     function addEinsatz() {
       const data = {
         action: 'addEinsatz',
@@ -628,13 +599,12 @@
           document.getElementById('einsatzVerantwortlich').value = '';
           document.getElementById('einsatzStunden').value = '';
           document.getElementById('einsatzHelferanzahl').value = '';
-          scheduleRefresh(400);
+          return ladeEinsaetze();
         })
         .catch(err => { alert('Fehler: ' + err.message); })
         .finally(() => { isBusyNetwork = false; });
     }
 
-    // === Admin: löschen ===
     function deleteEinsatz(id) {
       if (!confirm('Einsatz wirklich löschen?')) return;
       isBusyNetwork = true;
@@ -642,7 +612,7 @@
         .then(r => r.json())
         .then(result => {
           if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
-          scheduleRefresh(400);
+          return ladeEinsaetze();
         })
         .catch(err => { alert('Fehler: ' + err.message); })
         .finally(() => { isBusyNetwork = false; });
@@ -654,17 +624,9 @@
       return count;
     }
 
-    // === Info-Modal und Drucken ===
-    function openInfoModal() {
-      const m = document.getElementById('infoModal');
-      m.style.display = 'flex';
-      m.setAttribute('aria-hidden', 'false');
-    }
-    function closeInfoModal() {
-      const m = document.getElementById('infoModal');
-      m.style.display = 'none';
-      m.setAttribute('aria-hidden', 'true');
-    }
+    // === Info-Modal ===
+    function openInfoModal() { const m = document.getElementById('infoModal'); m.style.display = 'flex'; m.setAttribute('aria-hidden', 'false'); }
+    function closeInfoModal() { const m = document.getElementById('infoModal'); m.style.display = 'none'; m.setAttribute('aria-hidden', 'true'); }
     function druckeInfo() {
       const content = document.getElementById('infoContent').innerHTML;
       const w = window.open('', '', 'height=900,width=800');
