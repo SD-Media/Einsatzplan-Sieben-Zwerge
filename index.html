@@ -134,186 +134,190 @@
   </div>
 
   <script>
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
-  const ADMIN_PASSWORT = 'SiebenZwerge';
-  let globaleDaten = [], globaleSollPunkte = 10;
-
-  function showTab(id, event) {
-    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    document.querySelectorAll('.nav-tab').forEach(e => e.classList.remove('active'));
-    event.target.classList.add('active');
-  }
-
-  function togglePasswort() {
-    const input = document.getElementById('adminPasswort');
-    input.type = input.type === 'password' ? 'text' : 'password';
-  }
-
-  function loginAdmin() {
-    if (document.getElementById('adminPasswort').value === ADMIN_PASSWORT) {
-      document.getElementById('adminArea').style.display = 'block';
-      ladeEinsaetze();
-    } else {
-      alert('Falsches Passwort');
-    }
-  }
-
-  function addEinsatz() {
-    const daten = {
-      action: 'addEinsatz',
-      adminPassword: ADMIN_PASSWORT,
-      name: document.getElementById('einsatzTitel').value,
-      datum: document.getElementById('einsatzDatum').value,
-      uhrzeit: document.getElementById('einsatzUhrzeit').value,
-      verantwortlich: document.getElementById('einsatzVerantwortlich').value,
-      kategorie: document.getElementById('einsatzKategorie').value,
-      punkte: Number(document.getElementById('einsatzStunden').value),
-      helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value)
-    };
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify(daten),
-      headers: { 'Content-Type': 'application/json' }
-    })
-    .then(() => { alert('Einsatz erfolgreich gespeichert.'); ladeEinsaetze(); });
-  }
-
-  function resetAlleHelfer() {
-    if (!confirm("Alle Helfereinträge wirklich löschen?")) return;
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'removeAllHelfer', adminPassword: ADMIN_PASSWORT }),
-      headers: { 'Content-Type': 'application/json' }
-    }).then(() => ladeEinsaetze());
-  }
-
-  function ladeEinsaetze() {
-    fetch(SCRIPT_URL)
-    .then(res => res.json())
-    .then(json => {
-      globaleDaten = json.data;
-      globaleSollPunkte = json.sollPunkte;
-      zeigeElternUebersicht(globaleDaten);
-      zeigeEigeneEinsaetze(); // aktualisieren bei Name
-      zeigeAdminEinsaetze(globaleDaten);
-    });
-  }
-
-  function zeigeElternUebersicht(daten) {
-    const eltern = {};
-    daten.forEach(e => {
-      for (let k in e) {
-        if (k.startsWith('Helfer') && e[k]) {
-          const name = e[k].trim();
-          eltern[name] = (eltern[name] || 0) + Number(e.Punkte || 0);
-        }
-      }
-    });
-    const tbody = document.getElementById('parentOverview');
-    tbody.innerHTML = '';
-    Object.entries(eltern).sort((a,b) => a[0].localeCompare(b[0]))
-    .forEach(([name, ist]) => {
-      const diff = ist - globaleSollPunkte;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${name}</td><td>${ist}</td><td>${globaleSollPunkte}</td>
-                      <td class="${diff>=0?'diff-positive':'diff-negative'}">${diff}</td>`;
-      tbody.appendChild(tr);
-    });
-  }
-
-  function zeigeEigeneEinsaetze() {
-    const name = document.getElementById('nameInput').value.trim();
-    if (!name) return;
-    const eigene = globaleDaten.filter(e => Object.keys(e)
-      .some(k => k.startsWith('Helfer') && e[k]?.trim() === name));
-    const bereich = document.getElementById('eigeneEinsaetze');
-    bereich.innerHTML = '';
-    let punkte = 0; eigene.forEach(e => {
-      punkte += Number(e.Punkte || 0);
-      const cls = `einsatz-${e.kategorie?.toLowerCase().replace(/\s+/g,'')}`;
-      const div = document.createElement('div');
-      div.className = `einsatz-box ${cls}`;
-      div.innerHTML = `<strong>${e.name}</strong><br>${e.datum || '-'} – ${e.uhrzeit || '-'}<br>
-                       Verantwortlich: ${e.verantwortlich || '-'}<br>Kategorie: ${e.kategorie || '-'}`;
-      bereich.appendChild(div);
-    });
-    const summary = document.createElement('div');
-    summary.innerHTML = `<strong>Gesammelte Punkte: ${punkte} / ${globaleSollPunkte} (Differenz: ${punkte - globaleSollPunkte})</strong>`;
-    bereich.appendChild(summary);
-    const druckBtn = document.createElement('button');
-    druckBtn.textContent = 'Diese Ansicht drucken';
-    druckBtn.className = 'btn-primary';
-    druckBtn.onclick = printEigeneEinsaetze;
-    bereich.appendChild(druckBtn);
-  }
-
-  function printEigeneEinsaetze() {
-    const content = document.getElementById('eigeneEinsaetze').innerHTML;
-    const w = window.open('', '', 'height=600,width=800');
-    w.document.write(`<html><head><title>Druckansicht</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .einsatz-box { border-left: 10px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
-      </style></head><body>${content}</body></html>`);
-    w.document.close();
-    w.focus();
-    w.print();
-    w.close();
-  }
-
-  function zeigeAdminEinsaetze(daten) {
-    const area = document.getElementById('adminEinsaetze');
-    area.innerHTML = '';
-    daten.forEach(e => {
-      const div = document.createElement('div');
-      div.className = 'einsatz-box';
-      div.innerHTML = `${e.name} — ${e.datum} — ${e.uhrzeit}
-        <button onclick="openEditModal('${e.name}','${e.datum}','${e.uhrzeit}','${e.verantwortlich}','${e.kategorie}',${e.punkte},${e.helferanzahl})">Bearbeiten</button>`;
-      area.appendChild(div);
-    });
-  }
-
-  function openEditModal(name, datum, uhrzeit, verantwortlich, kategorie, punkte, helferanzahl) {
-    document.getElementById('bearbeitenID').value = ''; // ID nötig ggf erweitern
-    document.getElementById('bearbeitenTitel').value = name;
-    document.getElementById('bearbeitenDatum').value = datum;
-    document.getElementById('bearbeitenUhrzeit').value = uhrzeit;
-    document.getElementById('bearbeitenVerantwortlich').value = verantwortlich;
-    document.getElementById('bearbeitenKategorie').value = kategorie;
-    document.getElementById('bearbeitenPunkte').value = punkte;
-    document.getElementById('bearbeitenHelferanzahl').value = helferanzahl;
-    document.getElementById('editModal').classList.add('active');
-  }
-
-  function schliesseBearbeitenModal() {
-    document.getElementById('editModal').classList.remove('active');
-  }
-
-  function speichereBearbeitung() {
-    const params = {
-      action: 'updateEinsatz',
-      adminPassword: ADMIN_PASSWORT,
-      id: document.getElementById('bearbeitenID').value,
-      name: document.getElementById('bearbeitenTitel').value,
-      datum: document.getElementById('bearbeitenDatum').value,
-      uhrzeit: document.getElementById('bearbeitenUhrzeit').value,
-      verantwortlich: document.getElementById('bearbeitenVerantwortlich').value,
-      kategorie: document.getElementById('bearbeitenKategorie').value,
-      punkte: Number(document.getElementById('bearbeitenPunkte').value),
-      helferanzahl: Number(document.getElementById('bearbeitenHelferanzahl').value)
-    };
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify(params),
-      headers: { 'Content-Type': 'application/json' }
-    }).then(() => {
-      ladeEinsaetze();
-      schliesseBearbeitenModal();
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', ladeEinsaetze);
+    // Der komplette JS-Teil kommt als nächstes – wegen Länge folgt der Rest im nächsten Post.
   </script>
 </body>
 </html>
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
+const ADMIN_PASSWORT = 'SiebenZwerge';
+let globaleDaten = [], globaleSollPunkte = 10;
+
+function showTab(id, event) {
+  document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(e => e.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function togglePasswort() {
+  const input = document.getElementById('adminPasswort');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function loginAdmin() {
+  if (document.getElementById('adminPasswort').value === ADMIN_PASSWORT) {
+    document.getElementById('adminArea').style.display = 'block';
+    ladeEinsaetze();
+  } else {
+    alert('Falsches Passwort');
+  }
+}
+
+function addEinsatz() {
+  const daten = {
+    action: 'addEinsatz',
+    adminPassword: ADMIN_PASSWORT,
+    name: document.getElementById('einsatzTitel').value,
+    datum: document.getElementById('einsatzDatum').value,
+    uhrzeit: document.getElementById('einsatzUhrzeit').value,
+    verantwortlich: document.getElementById('einsatzVerantwortlich').value,
+    kategorie: document.getElementById('einsatzKategorie').value,
+    punkte: Number(document.getElementById('einsatzStunden').value),
+    helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value)
+  };
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify(daten),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(() => { alert('Einsatz erfolgreich gespeichert.'); ladeEinsaetze(); });
+}
+
+function resetAlleHelfer() {
+  if (!confirm("Alle Helfereinträge wirklich löschen?")) return;
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'removeAllHelfer', adminPassword: ADMIN_PASSWORT }),
+    headers: { 'Content-Type': 'application/json' }
+  }).then(() => ladeEinsaetze());
+}
+
+function ladeEinsaetze() {
+  fetch(SCRIPT_URL)
+  .then(res => res.json())
+  .then(json => {
+    globaleDaten = json.data;
+    globaleSollPunkte = json.sollPunkte;
+    zeigeElternUebersicht(globaleDaten);
+    zeigeEigeneEinsaetze();
+    zeigeAdminEinsaetze(globaleDaten);
+  });
+}
+
+function zeigeElternUebersicht(daten) {
+  const eltern = {};
+  daten.forEach(e => {
+    for (let k in e) {
+      if (k.startsWith('Helfer') && e[k]) {
+        const name = e[k].trim();
+        eltern[name] = (eltern[name] || 0) + Number(e.Punkte || 0);
+      }
+    }
+  });
+  const tbody = document.getElementById('parentOverview');
+  tbody.innerHTML = '';
+  Object.entries(eltern).sort((a,b) => a[0].localeCompare(b[0]))
+  .forEach(([name, ist]) => {
+    const diff = ist - globaleSollPunkte;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${name}</td><td>${ist}</td><td>${globaleSollPunkte}</td>
+                    <td class="${diff>=0?'diff-positive':'diff-negative'}">${diff}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function zeigeEigeneEinsaetze() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) return;
+  const eigene = globaleDaten.filter(e => Object.keys(e)
+    .some(k => k.startsWith('Helfer') && e[k]?.trim() === name));
+  const bereich = document.getElementById('eigeneEinsaetze');
+  bereich.innerHTML = '';
+  let punkte = 0; eigene.forEach(e => {
+    punkte += Number(e.Punkte || 0);
+    const cls = `einsatz-${e.kategorie?.toLowerCase().replace(/\s+/g,'')}`;
+    const div = document.createElement('div');
+    div.className = `einsatz-box ${cls}`;
+    div.innerHTML = `<strong>${e.name}</strong><br>${e.datum || '-'} – ${e.uhrzeit || '-'}<br>
+                     Verantwortlich: ${e.verantwortlich || '-'}<br>Kategorie: ${e.kategorie || '-'}`;
+    bereich.appendChild(div);
+  });
+  const summary = document.createElement('div');
+  summary.innerHTML = `<strong>Gesammelte Punkte: ${punkte} / ${globaleSollPunkte} (Differenz: ${punkte - globaleSollPunkte})</strong>`;
+  bereich.appendChild(summary);
+  const druckBtn = document.createElement('button');
+  druckBtn.textContent = 'Diese Ansicht drucken';
+  druckBtn.className = 'btn-primary';
+  druckBtn.onclick = printEigeneEinsaetze;
+  bereich.appendChild(druckBtn);
+}
+
+function printEigeneEinsaetze() {
+  const content = document.getElementById('eigeneEinsaetze').innerHTML;
+  const w = window.open('', '', 'height=600,width=800');
+  w.document.write(`<html><head><title>Druckansicht</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      .einsatz-box { border-left: 10px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+    </style></head><body>${content}</body></html>`);
+  w.document.close();
+  w.focus();
+  w.print();
+  w.close();
+}
+
+function zeigeAdminEinsaetze(daten) {
+  const area = document.getElementById('adminEinsaetze');
+  area.innerHTML = '';
+  daten.forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'einsatz-box';
+    div.innerHTML = `${e.name} — ${e.datum} — ${e.uhrzeit}
+      <button onclick="openEditModal('${e.name}','${e.datum}','${e.uhrzeit}','${e.verantwortlich}','${e.kategorie}',${e.punkte},${e.helferanzahl})">Bearbeiten</button>`;
+    area.appendChild(div);
+  });
+}
+
+function openEditModal(name, datum, uhrzeit, verantwortlich, kategorie, punkte, helferanzahl) {
+  document.getElementById('bearbeitenID').value = '';
+  document.getElementById('bearbeitenTitel').value = name;
+  document.getElementById('bearbeitenDatum').value = datum;
+  document.getElementById('bearbeitenUhrzeit').value = uhrzeit;
+  document.getElementById('bearbeitenVerantwortlich').value = verantwortlich;
+  document.getElementById('bearbeitenKategorie').value = kategorie;
+  document.getElementById('bearbeitenPunkte').value = punkte;
+  document.getElementById('bearbeitenHelferanzahl').value = helferanzahl;
+  document.getElementById('editModal').classList.add('active');
+}
+
+function schliesseBearbeitenModal() {
+  document.getElementById('editModal').classList.remove('active');
+}
+
+function speichereBearbeitung() {
+  const params = {
+    action: 'updateEinsatz',
+    adminPassword: ADMIN_PASSWORT,
+    id: document.getElementById('bearbeitenID').value,
+    name: document.getElementById('bearbeitenTitel').value,
+    datum: document.getElementById('bearbeitenDatum').value,
+    uhrzeit: document.getElementById('bearbeitenUhrzeit').value,
+    verantwortlich: document.getElementById('bearbeitenVerantwortlich').value,
+    kategorie: document.getElementById('bearbeitenKategorie').value,
+    punkte: Number(document.getElementById('bearbeitenPunkte').value),
+    helferanzahl: Number(document.getElementById('bearbeitenHelferanzahl').value)
+  };
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify(params),
+    headers: { 'Content-Type': 'application/json' }
+  }).then(() => {
+    ladeEinsaetze();
+    schliesseBearbeitenModal();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', ladeEinsaetze);
+</script>
+
