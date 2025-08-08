@@ -36,12 +36,8 @@
       background: #fff; 
       border-bottom: 2px solid #fff; 
     }
-    .tab-content { 
-      display: none; 
-    }
-    .tab-content.active { 
-      display: block; 
-    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
     .kategorien { 
       display: flex; 
       flex-wrap: wrap; 
@@ -73,14 +69,8 @@
       background: #2196f3; 
       color: white; 
     }
-    .diff-positive { 
-      color: green; 
-      font-weight: bold; 
-    }
-    .diff-negative { 
-      color: red; 
-      font-weight: bold; 
-    }
+    .diff-positive { color: green; font-weight: bold; }
+    .diff-negative { color: red; font-weight: bold; }
     input, select, button { 
       width: 100%; 
       margin-bottom: 10px; 
@@ -106,9 +96,7 @@
       cursor: pointer; 
       font-weight: bold; 
     }
-    button:hover { 
-      opacity: 0.9; 
-    }
+    button:hover { opacity: 0.9; }
     .einsatz-box { 
       border-left: 10px solid #ccc; 
       background: #f9f9f9; 
@@ -116,21 +104,11 @@
       margin-bottom: 15px; 
       border-radius: 8px; 
     }
-    .einsatz-gartenarbeit { 
-      border-left-color: #4caf50; 
-    }
-    .einsatz-verkaufsaktion { 
-      border-left-color: #ff9800; 
-    }
-    .einsatz-feste { 
-      border-left-color: #9c27b0; 
-    }
-    .einsatz-kindergartenpflege { 
-      border-left-color: #2196f3; 
-    }
-    .einsatz-sonstiges { 
-      border-left-color: #607d8b; 
-    }
+    .einsatz-gartenarbeit { border-left-color: #4caf50; }
+    .einsatz-verkaufsaktion { border-left-color: #ff9800; }
+    .einsatz-feste { border-left-color: #9c27b0; }
+    .einsatz-kindergartenpflege { border-left-color: #2196f3; }
+    .einsatz-sonstiges { border-left-color: #607d8b; }
     .helfer-input { 
       display: inline-block; 
       margin: 5px; 
@@ -145,39 +123,14 @@
       background: #e0f7fa; 
       border-color: #4caf50; 
     }
-    .helfer-input:disabled {
-      background: #f0f0f0;
-      color: #666;
-    }
-    .helfer-section {
-      margin-top: 15px;
-      padding: 10px;
-      background: #f5f5f5;
-      border-radius: 5px;
-    }
-    .helfer-section h4 {
-      margin: 0 0 10px 0;
-      color: #555;
-    }
-    .name-input-section {
-      max-width: 400px;
-      margin-bottom: 20px;
-    }
-    #nameInput {
-      max-width: 300px;
-    }
-    .einsatz-info {
-      margin-bottom: 10px;
-      line-height: 1.5;
-    }
-    .einsatz-info strong {
-      color: #2196f3;
-    }
-    .status-info {
-      font-size: 0.9em;
-      color: #666;
-      margin-top: 10px;
-    }
+    .helfer-input:disabled { background: #f0f0f0; color: #666; }
+    .helfer-section { margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px; }
+    .helfer-section h4 { margin: 0 0 10px 0; color: #555; }
+    .name-input-section { max-width: 400px; margin-bottom: 20px; }
+    #nameInput { max-width: 300px; }
+    .einsatz-info { margin-bottom: 10px; line-height: 1.5; }
+    .einsatz-info strong { color: #2196f3; }
+    .status-info { font-size: 0.9em; color: #666; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -190,7 +143,6 @@
     </div>
 
     <div id="einsatzTab" class="tab-content active">
-      <!-- Kategorien-Legende -->
       <div class="kategorien">
         <span class="kategorie gruen">Gartenarbeit</span>
         <span class="kategorie orange">Verkaufsaktion</span>
@@ -255,27 +207,15 @@
   </div>
 
   <script>
-    // WICHTIG: Hier muss die korrekte URL des Google Apps Script eingetragen werden!
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
     const ADMIN_PASS = 'SiebenZwerge';
     let globaleDaten = [];
     let globaleSollPunkte = 10;
 
     function showTab(id, event) {
-      // Alle Tab-Inhalte ausblenden
-      document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-      });
-      
-      // Gewählten Tab anzeigen
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById(id).classList.add('active');
-      
-      // Alle Tab-Buttons deaktivieren
-      document.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      
-      // Geklickten Tab-Button aktivieren
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
       event.target.classList.add('active');
     }
 
@@ -285,55 +225,55 @@
         alert('Falsches Passwort');
         return;
       }
-      
       document.getElementById('adminArea').style.display = 'block';
       ladeEinsaetze();
       alert('Erfolgreich als Admin angemeldet!');
     }
 
     function ladeEinsaetze() {
-      console.log('Lade Einsätze von:', SCRIPT_URL);
-      
       fetch(SCRIPT_URL)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-          return response.json();
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+          return r.json();
         })
         .then(json => {
-          console.log('Geladene Daten:', json);
           globaleDaten = json.data || [];
           globaleSollPunkte = json.sollPunkte || 10;
-          
           zeigeElternUebersicht();
           zeigeEigeneEinsaetze();
           zeigeEinsaetzeFuerEltern();
           zeigeAdminEinsaetze();
         })
-        .catch(error => {
-          console.error('Ladefehler:', error);
-          alert('Fehler beim Laden der Daten: ' + error.message);
+        .catch(err => {
+          console.error('Ladefehler:', err);
+          alert('Fehler beim Laden der Daten: ' + err.message);
         });
+    }
+
+    // Kategorie → CSS-Klasse
+    function katClassName(k) {
+      if (!k) return 'einsatz-sonstiges';
+      const s = k.toString().trim().toLowerCase();
+      if (s.startsWith('garten')) return 'einsatz-gartenarbeit';
+      if (s.startsWith('verkaufs')) return 'einsatz-verkaufsaktion'; // „Verkaufsaktion“ oder „Verkaufsaktionen“
+      if (s.startsWith('fest')) return 'einsatz-feste';
+      if (s.includes('kindergarten')) return 'einsatz-kindergartenpflege';
+      return 'einsatz-sonstiges';
     }
 
     function zeigeElternUebersicht() {
       const eltern = {};
-      
       globaleDaten.forEach(einsatz => {
         Object.keys(einsatz).forEach(key => {
           if (key.startsWith('Helfer') && einsatz[key]) {
             const name = einsatz[key].trim();
-            if (name) {
-              eltern[name] = (eltern[name] || 0) + Number(einsatz.Punkte || 0);
-            }
+            if (name) eltern[name] = (eltern[name] || 0) + Number(einsatz.Punkte || 0);
           }
         });
       });
 
       const tbody = document.getElementById('parentOverview');
       tbody.innerHTML = '';
-      
       Object.entries(eltern)
         .sort((a, b) => a[0].localeCompare(b[0]))
         .forEach(([name, istPunkte]) => {
@@ -352,7 +292,6 @@
     function zeigeEinsaetzeFuerEltern() {
       const einsatzListe = document.getElementById('einsatzListe');
       einsatzListe.innerHTML = '';
-      
       if (globaleDaten.length === 0) {
         einsatzListe.innerHTML = '<p>Keine Einsätze verfügbar.</p>';
         return;
@@ -360,10 +299,8 @@
 
       globaleDaten.forEach(einsatz => {
         const div = document.createElement('div');
-        const kategorieClass = `einsatz-${einsatz.kategorie?.toLowerCase().replace(/\s+/g, '')}`;
+        const kategorieClass = katClassName(einsatz.kategorie);
         div.className = `einsatz-box ${kategorieClass}`;
-        
-        // Basis-Informationen
         div.innerHTML = `
           <div class="einsatz-info">
             <strong>${einsatz.name || 'Unbenannter Einsatz'}</strong><br>
@@ -376,7 +313,6 @@
           </div>
         `;
 
-        // Helfer-Eingabefelder hinzufügen
         if (einsatz.helferanzahl > 0) {
           const helferSection = document.createElement('div');
           helferSection.className = 'helfer-section';
@@ -391,96 +327,54 @@
           for (let i = 0; i < einsatz.helferanzahl; i++) {
             const helferKey = `Helfer${i + 1}`;
             const currentHelfer = einsatz[helferKey] || '';
-            
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'helfer-input';
             input.value = currentHelfer;
             input.placeholder = `Helfer ${i + 1}`;
-            
-            if (currentHelfer) {
-              input.classList.add('filled');
-            }
+            if (currentHelfer) input.classList.add('filled');
 
-            // Event-Listener für Änderungen
             input.addEventListener('change', function() {
               const newName = this.value.trim();
               setHelfer(einsatz.ID, i, newName);
             });
-
-            // Event-Listener für visuelle Änderungen
             input.addEventListener('input', function() {
-              if (this.value.trim()) {
-                this.classList.add('filled');
-              } else {
-                this.classList.remove('filled');
-              }
+              if (this.value.trim()) this.classList.add('filled');
+              else this.classList.remove('filled');
             });
 
             helferSection.appendChild(input);
           }
-
           div.appendChild(helferSection);
         }
-
         einsatzListe.appendChild(div);
       });
     }
 
+    // POST ohne Content-Type Header → kein Preflight
     function setHelfer(einsatzId, helferIndex, name) {
-      const data = {
-        action: 'setHelfer',
-        id: String(einsatzId),
-        index: helferIndex,
-        name: name
-      };
-
-      console.log('Setze Helfer:', data);
-
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.success) {
-          console.log('Helfer erfolgreich gespeichert');
-          // Daten neu laden, um Übersicht zu aktualisieren
-          ladeEinsaetze();
-        } else {
-          alert('Fehler beim Speichern: ' + (result.message || 'Unbekannter Fehler'));
-        }
-      })
-      .catch(error => {
-        console.error('Speicherfehler:', error);
-        alert('Fehler beim Speichern: ' + error.message);
-      });
+      const data = { action: 'setHelfer', id: String(einsatzId), index: helferIndex, name: name };
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
+        .then(r => r.json())
+        .then(result => {
+          if (result.success) ladeEinsaetze();
+          else alert('Fehler beim Speichern: ' + (result.message || 'Unbekannter Fehler'));
+        })
+        .catch(err => alert('Fehler beim Speichern: ' + err.message));
     }
 
     function zeigeEigeneEinsaetze() {
       const eigeneEinsaetzeDiv = document.getElementById('eigeneEinsaetze');
-      const nameInput = document.getElementById('nameInput');
-      const name = nameInput.value.trim();
-      
-      if (!name) {
-        eigeneEinsaetzeDiv.innerHTML = '';
-        return;
-      }
+      const name = document.getElementById('nameInput').value.trim();
+      if (!name) { eigeneEinsaetzeDiv.innerHTML = ''; return; }
 
       let gesamtPunkte = 0;
       const eigeneEinsaetze = [];
-
       globaleDaten.forEach(einsatz => {
-        // Prüfen, ob der Name in einem der Helfer-Felder steht
         let istHelfer = false;
         for (let i = 1; i <= 10; i++) {
-          if (einsatz[`Helfer${i}`] && einsatz[`Helfer${i}`].trim() === name) {
-            istHelfer = true;
-            break;
-          }
+          if (einsatz[`Helfer${i}`] && einsatz[`Helfer${i}`].trim() === name) { istHelfer = true; break; }
         }
-        
         if (istHelfer) {
           eigeneEinsaetze.push(einsatz);
           gesamtPunkte += Number(einsatz.Punkte || 0);
@@ -488,16 +382,14 @@
       });
 
       eigeneEinsaetzeDiv.innerHTML = '';
-      
       if (eigeneEinsaetze.length === 0) {
         eigeneEinsaetzeDiv.innerHTML = `<div class="einsatz-box"><strong>Keine Einsätze für "${name}" gefunden.</strong></div>`;
         return;
       }
 
       eigeneEinsaetze.forEach(einsatz => {
-        const kategorieClass = `einsatz-${einsatz.kategorie?.toLowerCase().replace(/\s+/g, '')}`;
         const div = document.createElement('div');
-        div.className = `einsatz-box ${kategorieClass}`;
+        div.className = `einsatz-box ${katClassName(einsatz.kategorie)}`;
         div.innerHTML = `
           <strong>${einsatz.name}</strong><br>
           ${einsatz.datum || 'Nicht angegeben'} – ${einsatz.uhrzeit || 'Nicht angegeben'}<br>
@@ -508,7 +400,6 @@
         eigeneEinsaetzeDiv.appendChild(div);
       });
 
-      // Zusammenfassung
       const differenz = gesamtPunkte - globaleSollPunkte;
       const summaryDiv = document.createElement('div');
       summaryDiv.className = 'einsatz-box';
@@ -522,14 +413,9 @@
 
     function zeigeAdminEinsaetze() {
       const adminEinsaetzeDiv = document.getElementById('adminEinsaetze');
-      
-      if (!document.getElementById('adminArea').style.display || 
-          document.getElementById('adminArea').style.display === 'none') {
-        return;
-      }
-      
+      if (!document.getElementById('adminArea').style.display || document.getElementById('adminArea').style.display === 'none') return;
+
       adminEinsaetzeDiv.innerHTML = '';
-      
       globaleDaten.forEach(einsatz => {
         const div = document.createElement('div');
         div.className = 'einsatz-box';
@@ -555,105 +441,65 @@
         helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value)
       };
 
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.success) {
-          alert('Einsatz erfolgreich erstellt!');
-          // Felder leeren
-          document.getElementById('einsatzTitel').value = '';
-          document.getElementById('einsatzDatum').value = '';
-          document.getElementById('einsatzUhrzeit').value = '';
-          document.getElementById('einsatzVerantwortlich').value = '';
-          document.getElementById('einsatzStunden').value = '';
-          document.getElementById('einsatzHelferanzahl').value = '';
-          ladeEinsaetze();
-        } else {
-          alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
-        }
-      })
-      .catch(error => {
-        console.error('Fehler beim Erstellen:', error);
-        alert('Fehler beim Erstellen des Einsatzes: ' + error.message);
-      });
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
+        .then(r => r.json())
+        .then(result => {
+          if (result.success) {
+            alert('Einsatz erfolgreich erstellt!');
+            document.getElementById('einsatzTitel').value = '';
+            document.getElementById('einsatzDatum').value = '';
+            document.getElementById('einsatzUhrzeit').value = '';
+            document.getElementById('einsatzVerantwortlich').value = '';
+            document.getElementById('einsatzStunden').value = '';
+            document.getElementById('einsatzHelferanzahl').value = '';
+            ladeEinsaetze();
+          } else {
+            alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
+          }
+        })
+        .catch(err => {
+          console.error('Fehler beim Erstellen:', err);
+          alert('Fehler beim Erstellen des Einsatzes: ' + err.message);
+        });
     }
 
     function resetAlleHelfer() {
-      if (!confirm('Wirklich alle Helfereinträge löschen?')) {
-        return;
-      }
-
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'removeAllHelfer',
-          adminPassword: ADMIN_PASS
+      if (!confirm('Wirklich alle Helfereinträge löschen?')) return;
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'removeAllHelfer', adminPassword: ADMIN_PASS }) })
+        .then(r => r.json())
+        .then(result => {
+          if (result.success) { alert('Alle Helfereinträge wurden gelöscht.'); ladeEinsaetze(); }
+          else alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
         })
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.success) {
-          alert('Alle Helfereinträge wurden gelöscht.');
-          ladeEinsaetze();
-        } else {
-          alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
-        }
-      })
-      .catch(error => {
-        console.error('Fehler beim Löschen:', error);
-        alert('Fehler beim Löschen der Helfereinträge: ' + error.message);
-      });
+        .catch(err => {
+          console.error('Fehler beim Löschen:', err);
+          alert('Fehler beim Löschen der Helfereinträge: ' + err.message);
+        });
     }
 
     function deleteEinsatz(id) {
-      if (!confirm('Einsatz wirklich löschen?')) {
-        return;
-      }
-
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'deleteEinsatz',
-          adminPassword: ADMIN_PASS,
-          id: String(id)
+      if (!confirm('Einsatz wirklich löschen?')) return;
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteEinsatz', adminPassword: ADMIN_PASS, id: String(id) }) })
+        .then(r => r.json())
+        .then(result => {
+          if (result.success) { alert('Einsatz erfolgreich gelöscht!'); ladeEinsaetze(); }
+          else alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
         })
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.success) {
-          alert('Einsatz erfolgreich gelöscht!');
-          ladeEinsaetze();
-        } else {
-          alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
-        }
-      })
-      .catch(error => {
-        console.error('Fehler beim Löschen:', error);
-        alert('Fehler beim Löschen des Einsatzes: ' + error.message);
-      });
+        .catch(err => {
+          console.error('Fehler beim Löschen:', err);
+          alert('Fehler beim Löschen des Einsatzes: ' + err.message);
+        });
     }
 
     function zaehleHelfer(einsatz) {
       let count = 0;
       for (let i = 1; i <= 10; i++) {
-        if (einsatz[`Helfer${i}`] && einsatz[`Helfer${i}`].trim()) {
-          count++;
-        }
+        if (einsatz[`Helfer${i}`] && einsatz[`Helfer${i}`].trim()) count++;
       }
       return count;
     }
 
-    // Beim Laden der Seite Daten laden
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('Seite geladen, lade Einsätze...');
-      ladeEinsaetze();
-    });
+    document.addEventListener('DOMContentLoaded', ladeEinsaetze);
   </script>
 </body>
 </html>
