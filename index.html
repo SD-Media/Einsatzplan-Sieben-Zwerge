@@ -3,31 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <title>Arbeitseinsätze</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #f0f4f8; color: #333 }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 0; background: #f0f4f8; color: #333 }
     .container { max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1) }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px }
-    .nav-tab { background: #ddd; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; border: none }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap }
+    .nav-tab { background: #ddd; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600; border: none }
     .nav-tab.active { background: #fff; border-bottom: 2px solid #fff }
     .tab-content { display: none }
     .tab-content.active { display: block }
 
     .kategorien { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px }
-    .kategorie { padding: 6px 12px; border-radius: 20px; color: white; font-weight: bold }
+    .kategorie { padding: 6px 12px; border-radius: 20px; color: white; font-weight: 600 }
     .gruen { background: #4caf50 } .orange { background: #ff9800 } .lila { background: #9c27b0 } .blau { background: #2196f3 } .grau { background: #607d8b }
 
     .uebersicht { width: 100%; border-collapse: collapse; margin-bottom: 20px }
     .uebersicht th, .uebersicht td { border: 1px solid #ccc; padding: 8px; text-align: center }
     .uebersicht th { background: #2196f3; color: white }
-    .diff-positive { color: green; font-weight: bold }
-    .diff-negative { color: red; font-weight: bold }
+    .diff-positive { color: #2e7d32; font-weight: 700 }
+    .diff-negative { color: #c62828; font-weight: 700 }
 
-    input, select, button { width: 100%; margin-bottom: 10px; padding: 10px; font-size: 1rem; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px }
-    button.btn-primary { background: #2196f3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: auto }
-    button.btn-danger { background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: auto }
-    button:hover { opacity: 0.9 }
+    input, select, button { font-size: 1rem }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box }
+    button.btn-primary { background: #2196f3; color: white; padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; width: auto }
+    button.btn-danger  { background: #f44336; color: white; padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; width: auto }
+    button:hover { opacity: .92 }
 
-    .einsatz-box { border-left: 10px solid #ccc; background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px }
+    .einsatz-box { border-left: 10px solid #ccc; background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 10px }
     .einsatz-gartenarbeit { border-left-color: #4caf50 }
     .einsatz-verkaufsaktion { border-left-color: #ff9800 }
     .einsatz-feste { border-left-color: #9c27b0 }
@@ -38,34 +40,36 @@
     .einsatz-info { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 10px; line-height: 1.4 }
     .einsatz-info > div { white-space: nowrap }
 
-    .helfer-input { display: inline-block; margin: 5px; padding: 6px 10px; border: 2px solid #f44336; border-radius: 5px; min-width: 150px; font-size: 1rem; width: auto }
+    .helfer-input { display: inline-block; margin: 5px; padding: 6px 10px; border: 2px solid #f44336; border-radius: 6px; min-width: 150px; font-size: 1rem; width: auto; background: #fff }
     .helfer-input.filled { background: #e0f7fa; border-color: #4caf50 }
     .helfer-input:disabled { background: #f0f0f0; color: #666 }
-    .helfer-section { margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px }
-    .helfer-section h4 { margin: 0 0 10px 0; color: #555 }
+    .helfer-section { margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 8px }
+    .helfer-section h4 { margin: 0 0 8px 0; color: #555; font-size: 1rem }
 
-    .name-input-section { max-width: 420px; margin-bottom: 20px }
-    #nameInput { max-width: 300px }
-    .status-info { font-size: 0.9em; color: #666; margin-top: 10px }
+    .name-input-section { max-width: 520px; margin-bottom: 20px }
+    #nameInput { max-width: 340px }
+
+    .status-info { font-size: .92em; color: #666; margin-top: 8px }
 
     /* Admin Login Row */
-    .admin-login-row { display: flex; align-items: center; gap: 10px; max-width: 420px }
+    .admin-login-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap }
     #adminPasswort { width: 160px; padding: 8px }
     .toggle-wrap { display: flex; align-items: center; gap: 6px; white-space: nowrap; user-select: none }
 
-    .admin-edit-grid { display: grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap: 8px }
+    .admin-edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px }
     .admin-actions { display: flex; gap: 8px; flex-wrap: wrap }
 
     /* Modal (für Bearbeiten und Info) */
-    .modal { display: none; position: fixed; z-index: 9999; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 20px }
-    .modal-content { background: #fff; border-radius: 12px; max-width: 720px; width: 100%; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2) }
+    .modal { display: none; position: fixed; z-index: 9999; inset: 0; background: rgba(0,0,0,.5); align-items: center; justify-content: center; padding: 20px }
+    .modal-content { background: #fff; border-radius: 12px; max-width: 760px; width: 100%; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,.2) }
     .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px }
-    .modal-title { font-size: 1.1rem; font-weight: 700 }
-    .modal-close { background: transparent; border: none; font-size: 1.4rem; cursor: pointer; width: auto }
-    .modal-grid { display: grid; grid-template-columns: repeat(2, minmax(180px,1fr)); gap: 10px }
+    .modal-title { font-size: 1.1rem; font-weight: 800 }
+    .modal-close { background: transparent; border: none; font-size: 1.6rem; cursor: pointer; width: auto }
+    .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px }
 
-    /* Druck-Styles für das separate Druckfenster werden dort gesetzt */
+    /* kleine Hilfeknöpfe oben */
+    .top-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px }
   </style>
 </head>
 <body>
@@ -80,7 +84,7 @@
 
     <!-- Einsätze -->
     <div id="einsatzTab" class="tab-content active">
-      <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px">
+      <div class="top-actions">
         <button class="btn-primary" onclick="openInfoModal()">ℹ️ Info</button>
         <button class="btn-primary" onclick="druckeInfo()">Anleitung drucken</button>
       </div>
@@ -109,7 +113,7 @@
     <div id="meineTab" class="tab-content">
       <h2>Meine Einsätze anzeigen</h2>
       <div class="name-input-section">
-        <input id="nameInput" placeholder="Geben Sie Ihren Namen ein...">
+        <input id="nameInput" placeholder="Gib deinen Namen ein">
         <div style="display:flex; gap:10px; flex-wrap:wrap">
           <button class="btn-primary" onclick="zeigeEigeneEinsaetze()">Anzeigen</button>
           <button class="btn-primary" onclick="druckeEigeneEinsaetze()">Diese Ansicht drucken</button>
@@ -189,18 +193,14 @@
         <button class="modal-close" onclick="closeInfoModal()">×</button>
       </div>
       <div id="infoContent">
-        <p><strong>Was Sie hier tun können</strong></p>
+        <p><strong>Wichtiger Hinweis:</strong> Das Laden und Speichern kann ein paar Sekunden dauern da die Daten direkt in eine Excel-Tabelle übertragen werden. Nach kurzer Zeit sind deine Änderungen gespeichert und auch in der Elternübersicht sichtbar.</p>
         <ul>
-          <li>Alle verfügbaren Arbeitseinsätze sehen – mit Datum, Uhrzeit, Verantwortlichen und benötigter Helferanzahl</li>
-          <li>Sich als Helfer in freie Felder eintragen. Eingetragene Felder werden markiert</li>
-          <li>Oben in der Elternübersicht sehen Sie die gesammelten Punkte pro Elternname im Vergleich zu den Soll-Punkten</li>
-          <li>Über „Meine Einsätze“ können Sie Ihre eigenen Einträge gefiltert anzeigen und drucken</li>
-        </ul>
-        <p><strong>Wichtig</strong></p>
-        <ul>
-          <li>Bitte tragen Sie Ihren Namen einheitlich ein, damit die Punkte richtig zugeordnet werden</li>
-          <li>Änderungen werden sofort gespeichert und sind für alle sichtbar</li>
-          <li>Bei Fragen wenden Sie sich an die Verantwortlichen der jeweiligen Einsätze</li>
+          <li>Hier findest du alle anstehenden Arbeitseinsätze mit Datum Uhrzeit Verantwortlichen und der Anzahl der benötigten Helfer</li>
+          <li>Trage dich als Helfer ein indem du in ein freies Feld klickst und deinen Namen einträgst</li>
+          <li>Die Anzeige „x / y Helfer“ zeigt wie viele Plätze schon belegt sind und wie viele noch frei sind</li>
+          <li>Türkis markierte Felder sind bereits ausgefüllt leere Felder sind frei</li>
+          <li>Achte auf die korrekte Schreibweise deines Namens damit deine Punkte in der Elternübersicht richtig zugeordnet werden</li>
+          <li><strong>Unter dem Reiter „Meine Einsätze“ oben in der Mitte kannst du</strong> gezielt deine eigenen Termine anzeigen und ausdrucken</li>
         </ul>
       </div>
       <div class="modal-actions">
@@ -211,13 +211,18 @@
   </div>
 
   <script>
+    // === Konfiguration ===
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
     const ADMIN_PASS = 'SiebenZwerge';
+    const AUTO_REFRESH_MS = 15000;
+
+    // === State ===
     let globaleDaten = [];
     let globaleSollPunkte = 10;
+    let isBusyNetwork = false;
+    let editContext = { id: null };
 
-    let editContext = { id: null }; // für Modal
-
+    // === Tabs ===
     function showTab(id, event) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById(id).classList.add('active');
@@ -225,7 +230,7 @@
       event.target.classList.add('active');
     }
 
-    // Passwort anzeigen/Enter-Login
+    // === Admin Login ===
     function togglePass() {
       const inp = document.getElementById('adminPasswort');
       inp.type = (inp.type === 'password') ? 'text' : 'password';
@@ -237,7 +242,6 @@
         loginAdmin();
       }
     });
-
     function loginAdmin() {
       const passwortInput = document.getElementById('adminPasswort');
       if (passwortInput.value !== ADMIN_PASS) {
@@ -249,34 +253,45 @@
       alert('Erfolgreich als Admin angemeldet!');
     }
 
+    // === Daten laden mit Datumssortierung ===
     function ladeEinsaetze() {
-      fetch(SCRIPT_URL)
+      return fetch(SCRIPT_URL)
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`); return r.json(); })
         .then(json => {
-          // Erwartet: { data: [...], sollPunkte: number } wie in deinem Script
-          globaleDaten = (json.data || []).slice();
-
-          // Sortierung nach Datum (Format TT.MM.JJJJ oder leer)
-          globaleDaten.sort((a, b) => {
-            const pa = parseDE(a.datum);
-            const pb = parseDE(b.datum);
-            return pa - pb;
-          });
-
+          const arr = (json.data || []).slice();
+          arr.sort((a, b) => parseDE(a.datum) - parseDE(b.datum));
+          globaleDaten = arr;
           globaleSollPunkte = json.sollPunkte || 10;
 
           zeigeElternUebersicht();
-          zeigeEigeneEinsaetze(); // aktualisiert eigene Ansicht, falls Name gesetzt
+          zeigeEigeneEinsaetze();
           zeigeEinsaetzeFuerEltern();
           zeigeAdminEinsaetze();
         })
         .catch(err => {
           console.error('Ladefehler:', err);
-          alert('Fehler beim Laden der Daten: ' + err.message);
         });
     }
 
-    // Hilfsfunktion: TT.MM.JJJJ -> Date
+    // Auto-Refresh alle 15 s, aber nur wenn kein Eingabefeld aktiv ist und keine Modals offen sind und kein Netz-POST läuft
+    function canAutoRefresh() {
+      if (isBusyNetwork) return false;
+      const active = document.activeElement;
+      const isEditingField = active && (active.matches('input, textarea, select') || active.isContentEditable);
+      const editOpen = document.getElementById('editModal').style.display === 'flex';
+      const infoOpen = document.getElementById('infoModal').style.display === 'flex';
+      return !isEditingField && !editOpen && !infoOpen;
+    }
+    function startAutoRefresh() {
+      setInterval(() => {
+        if (canAutoRefresh()) ladeEinsaetze();
+      }, AUTO_REFRESH_MS);
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && canAutoRefresh()) ladeEinsaetze();
+    });
+
+    // === Helpers ===
     function parseDE(s) {
       if (!s || typeof s !== 'string') return new Date(9999, 11, 31);
       const m = s.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
@@ -284,8 +299,6 @@
       const [_, dd, mm, yyyy] = m;
       return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
     }
-
-    // Kategorie → CSS-Klasse
     function katClassName(k) {
       if (!k) return 'einsatz-sonstiges';
       const s = k.toString().trim().toLowerCase();
@@ -296,6 +309,7 @@
       return 'einsatz-sonstiges';
     }
 
+    // === Elternübersicht ===
     function zeigeElternUebersicht() {
       const eltern = {};
       globaleDaten.forEach(einsatz => {
@@ -322,6 +336,7 @@
       });
     }
 
+    // === Einsätze Liste (Elternbereich) ===
     function zeigeEinsaetzeFuerEltern() {
       const einsatzListe = document.getElementById('einsatzListe');
       einsatzListe.innerHTML = '';
@@ -372,8 +387,7 @@
               setHelfer(einsatz.ID, i, newName);
             });
             input.addEventListener('input', function() {
-              if (this.value.trim()) this.classList.add('filled');
-              else this.classList.remove('filled');
+              if (this.value.trim()) this.classList.add('filled'); else this.classList.remove('filled');
             });
 
             helferSection.appendChild(input);
@@ -384,7 +398,7 @@
       });
     }
 
-    // Meine Einsätze: ohne Punkte und ohne Kategorie
+    // === Meine Einsätze (ohne Kategorie und ohne Punkte) ===
     function zeigeEigeneEinsaetze() {
       const eigeneEinsaetzeDiv = document.getElementById('eigeneEinsaetze');
       const name = document.getElementById('nameInput').value.trim();
@@ -434,15 +448,12 @@
       eigeneEinsaetzeDiv.appendChild(summaryDiv);
     }
 
-    // Schöne Druckansicht für "Meine Einsätze"
+    // === Schöne Druckansicht für "Meine Einsätze" ===
     function druckeEigeneEinsaetze() {
       const name = document.getElementById('nameInput').value.trim();
       const wrap = document.getElementById('eigeneEinsaetze');
       const inhalt = wrap.innerHTML;
-      if (!inhalt.trim()) {
-        alert('Keine Einsätze zum Drucken vorhanden.');
-        return;
-      }
+      if (!inhalt.trim()) { alert('Keine Einsätze zum Drucken vorhanden.'); return; }
       const heute = new Date();
       const datum = heute.toLocaleDateString('de-DE');
       const zeit = heute.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
@@ -485,9 +496,9 @@
       w.document.close();
       w.focus();
       w.print();
-      // w.close(); // optional
     }
 
+    // === Adminliste rendern (mit Farbstreifen) ===
     function zeigeAdminEinsaetze() {
       const adminEinsaetzeDiv = document.getElementById('adminEinsaetze');
       if (!document.getElementById('adminArea').style.display || document.getElementById('adminArea').style.display === 'none') return;
@@ -495,7 +506,8 @@
       adminEinsaetzeDiv.innerHTML = '';
       globaleDaten.forEach(einsatz => {
         const div = document.createElement('div');
-        div.className = 'einsatz-box';
+        const kategorieClass = katClassName(einsatz.kategorie);
+        div.className = `einsatz-box ${kategorieClass}`;
         div.id = `admin-einsatz-${einsatz.ID}`;
         div.innerHTML = `
           <div class="einsatz-info" style="margin-bottom:6px">
@@ -514,7 +526,7 @@
       });
     }
 
-    // Modal: Einsatz bearbeiten
+    // === Modal: Einsatz bearbeiten ===
     function startEditEinsatz(id) {
       const e = globaleDaten.find(x => String(x.ID) === String(id));
       if (!e) return;
@@ -529,7 +541,6 @@
       document.getElementById('edit-anzahl').value = Number(e.helferanzahl) || 0;
       openEditModal();
     }
-
     function openEditModal() {
       const m = document.getElementById('editModal');
       m.style.display = 'flex';
@@ -539,8 +550,8 @@
       const m = document.getElementById('editModal');
       m.style.display = 'none';
       m.setAttribute('aria-hidden', 'true');
+      editContext.id = null;
     }
-
     function saveEdit() {
       if (!editContext.id) return;
       const payload = {
@@ -555,10 +566,11 @@
         Punkte: Number(document.getElementById('edit-punkte').value),
         helferanzahl: Number(document.getElementById('edit-anzahl').value)
       };
-
+      isBusyNetwork = true;
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
         .then(r => r.json())
         .then(result => {
+          isBusyNetwork = false;
           if (result.success) {
             closeEditModal();
             ladeEinsaetze();
@@ -566,18 +578,20 @@
             alert('Fehler beim Aktualisieren: ' + (result.message || 'Unbekannter Fehler'));
           }
         })
-        .catch(err => alert('Fehler beim Aktualisieren: ' + err.message));
+        .catch(err => { isBusyNetwork = false; alert('Fehler beim Aktualisieren: ' + err.message); });
     }
 
-    // Helfer setzen
+    // === Helfer setzen ===
     function setHelfer(einsatzId, helferIndex, name) {
       const data = { action: 'setHelfer', id: String(einsatzId), index: helferIndex, name: name };
+      isBusyNetwork = true;
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
         .then(r => r.json())
-        .then(result => { if (result.success) ladeEinsaetze(); else alert('Fehler beim Speichern: ' + (result.message || 'Unbekannter Fehler')) })
-        .catch(err => alert('Fehler beim Speichern: ' + err.message));
+        .then(result => { isBusyNetwork = false; if (result.success) ladeEinsaetze(); else alert('Fehler beim Speichern: ' + (result.message || 'Unbekannter Fehler')) })
+        .catch(err => { isBusyNetwork = false; alert('Fehler beim Speichern: ' + err.message); });
     }
 
+    // === Admin: neuen Einsatz anlegen ===
     function addEinsatz() {
       const data = {
         action: 'addEinsatz',
@@ -590,9 +604,11 @@
         punkte: Number(document.getElementById('einsatzStunden').value),
         helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value)
       };
+      isBusyNetwork = true;
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
         .then(r => r.json())
         .then(result => {
+          isBusyNetwork = false;
           if (result.success) {
             document.getElementById('einsatzTitel').value = '';
             document.getElementById('einsatzDatum').value = '';
@@ -603,32 +619,27 @@
             ladeEinsaetze();
           } else alert('Fehler: ' + (result.message || 'Unbekannter Fehler'));
         })
-        .catch(err => alert('Fehler beim Erstellen: ' + err.message));
+        .catch(err => { isBusyNetwork = false; alert('Fehler beim Erstellen: ' + err.message); });
     }
 
+    // === Admin: löschen ===
     function deleteEinsatz(id) {
       if (!confirm('Einsatz wirklich löschen?')) return;
+      isBusyNetwork = true;
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteEinsatz', adminPassword: ADMIN_PASS, id: String(id) }) })
         .then(r => r.json())
-        .then(result => { if (result.success) ladeEinsaetze(); else alert('Fehler: ' + (result.message || 'Unbekannter Fehler')) })
-        .catch(err => alert('Fehler beim Löschen: ' + err.message));
+        .then(result => { isBusyNetwork = false; if (result.success) ladeEinsaetze(); else alert('Fehler: ' + (result.message || 'Unbekannter Fehler')) })
+        .catch(err => { isBusyNetwork = false; alert('Fehler beim Löschen: ' + err.message); });
     }
 
-    function resetAlleHelfer() {
-      if (!confirm('Wirklich alle Helfereinträge löschen?')) return;
-      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'removeAllHelfer', adminPassword: ADMIN_PASS }) })
-        .then(r => r.json())
-        .then(result => { if (result.success) ladeEinsaetze(); else alert('Fehler: ' + (result.message || 'Unbekannter Fehler')) })
-        .catch(err => alert('Fehler beim Löschen: ' + err.message));
-    }
-
+    // === Helfer zählen ===
     function zaehleHelfer(einsatz) {
       let count = 0;
       for (let i = 1; i <= 10; i++) if (einsatz[`Helfer${i}`] && einsatz[`Helfer${i}`].trim()) count++;
       return count;
     }
 
-    // Info-Modal
+    // === Info-Modal und Drucken ===
     function openInfoModal() {
       const m = document.getElementById('infoModal');
       m.style.display = 'flex';
@@ -661,7 +672,10 @@
       w.print();
     }
 
-    document.addEventListener('DOMContentLoaded', ladeEinsaetze);
+    // === Boot ===
+    document.addEventListener('DOMContentLoaded', () => {
+      ladeEinsaetze().then(() => startAutoRefresh());
+    });
   </script>
 </body>
 </html>
