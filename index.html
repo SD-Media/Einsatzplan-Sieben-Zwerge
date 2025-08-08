@@ -250,13 +250,46 @@
       alert('Erfolgreich als Admin angemeldet!');
     }
 
-    // === Daten laden (sortiert nach Datum) ===
+    // === Datum-Helper ===
+    function toDEDateString(val) {
+      if (val instanceof Date && !isNaN(val)) {
+        const dd = String(val.getDate()).padStart(2, '0');
+        const mm = String(val.getMonth() + 1).padStart(2, '0');
+        const yyyy = val.getFullYear();
+        return `${dd}.${mm}.${yyyy}`;
+      }
+      const s = String(val || '').trim();
+      if (!s) return s;
+      if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) return s;
+      const d = new Date(s);
+      if (!isNaN(d)) return toDEDateString(d);
+      return s;
+    }
+    function parseDE(s) {
+      if (!s || typeof s !== 'string') return new Date(9999, 11, 31);
+      const m = s.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+      if (!m) return new Date(9999, 11, 31);
+      const [_, dd, mm, yyyy] = m;
+      return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    }
+    function katClassName(k) {
+      if (!k) return 'einsatz-sonstiges';
+      const s = k.toString().trim().toLowerCase();
+      if (s.startsWith('garten')) return 'einsatz-gartenarbeit';
+      if (s.startsWith('verkaufs')) return 'einsatz-verkaufsaktion';
+      if (s.startsWith('fest')) return 'einsatz-feste';
+      if (s.includes('kindergarten')) return 'einsatz-kindergartenpflege';
+      return 'einsatz-sonstiges';
+    }
+
+    // === Daten laden (Datum normalisieren + sortieren) ===
     function ladeEinsaetze() {
       return fetch(SCRIPT_URL)
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`); return r.json(); })
         .then(json => {
           const arr = (json.data || []).slice();
-          arr.sort((a, b) => parseDE(a.datum) - parseDE(b.datum));
+          arr.forEach(e => { e.datum = toDEDateString(e.datum); });     // Normalisieren
+          arr.sort((a, b) => parseDE(a.datum) - parseDE(b.datum));      // Sortieren
           globaleDaten = arr;
           globaleSollPunkte = json.sollPunkte || 10;
 
@@ -279,24 +312,6 @@
     }
     function startAutoRefresh() { setInterval(() => { if (canAutoRefresh()) ladeEinsaetze(); }, AUTO_REFRESH_MS); }
     document.addEventListener('visibilitychange', () => { if (!document.hidden && canAutoRefresh()) ladeEinsaetze(); });
-
-    // === Helpers ===
-    function parseDE(s) {
-      if (!s || typeof s !== 'string') return new Date(9999, 11, 31);
-      const m = s.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-      if (!m) return new Date(9999, 11, 31);
-      const [_, dd, mm, yyyy] = m;
-      return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-    }
-    function katClassName(k) {
-      if (!k) return 'einsatz-sonstiges';
-      const s = k.toString().trim().toLowerCase();
-      if (s.startsWith('garten')) return 'einsatz-gartenarbeit';
-      if (s.startsWith('verkaufs')) return 'einsatz-verkaufsaktion';
-      if (s.startsWith('fest')) return 'einsatz-feste';
-      if (s.includes('kindergarten')) return 'einsatz-kindergartenpflege';
-      return 'einsatz-sonstiges';
-    }
 
     // === Elternübersicht ===
     function zeigeElternUebersicht() {
@@ -367,20 +382,17 @@
             input.placeholder = `Helfer ${i + 1}`;
             if (currentHelfer) input.classList.add('filled');
 
-            // Optimistic UI: sofort sichtbar halten + direkt neu laden nach Erfolg
+            // Optimistic UI + sofort neu laden nach Erfolg
             input.addEventListener('change', function () {
               const newName = this.value.trim();
-
-              // lokal aktualisieren
               einsatz[helferKey] = newName;
               if (newName) this.classList.add('filled'); else this.classList.remove('filled');
               statusDiv.innerHTML = `Belegt: ${zaehleHelfer(einsatz)} von ${einsatz.helferanzahl} Plätzen`;
-              zeigeElternUebersicht(); // Übersicht sofort neu
+              zeigeElternUebersicht();
 
-              // speichern
               this.disabled = true;
               setHelfer(einsatz.ID, i, newName)
-                .then(() => ladeEinsaetze()) // danach echte Daten holen
+                .then(() => ladeEinsaetze())
                 .finally(() => { this.disabled = false; });
             });
 
@@ -558,7 +570,7 @@
         .then(result => {
           if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
           closeEditModal();
-          return ladeEinsaetze(); // sofort nachziehen
+          return ladeEinsaetze(); // sofort neu laden und sortieren
         })
         .catch(err => { alert('Fehler beim Aktualisieren: ' + err.message); })
         .finally(() => { isBusyNetwork = false; });
@@ -599,7 +611,7 @@
           document.getElementById('einsatzVerantwortlich').value = '';
           document.getElementById('einsatzStunden').value = '';
           document.getElementById('einsatzHelferanzahl').value = '';
-          return ladeEinsaetze();
+          return ladeEinsaetze(); // sofort neu laden und sortieren
         })
         .catch(err => { alert('Fehler: ' + err.message); })
         .finally(() => { isBusyNetwork = false; });
@@ -612,7 +624,7 @@
         .then(r => r.json())
         .then(result => {
           if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
-          return ladeEinsaetze();
+          return ladeEinsaetze(); // sofort neu laden und sortieren
         })
         .catch(err => { alert('Fehler: ' + err.message); })
         .finally(() => { isBusyNetwork = false; });
