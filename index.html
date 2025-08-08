@@ -17,9 +17,18 @@
     .tab-content { display: none }
     .tab-content.active { display: block }
 
-    .kategorien { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px }
+    .kategorien { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px }
     .kategorie { padding: 6px 12px; border-radius: 20px; color: white; font-weight: 600 }
     .gruen { background: #4caf50 } .orange { background: #ff9800 } .lila { background: #9c27b0 } .blau { background: #2196f3 } .grau { background: #607d8b }
+
+    .soll-info {
+      display: flex; align-items: center; gap: 8px;
+      background: #e8f4ff; color: #0b5cad;
+      border: 1px solid #cfe8ff; border-left: 6px solid #2196f3;
+      padding: 10px 12px; border-radius: 10px;
+      margin: 10px 0 16px 0; font-weight: 600
+    }
+    .soll-info .value { font-size: 1.1rem }
 
     .uebersicht { width: 100%; border-collapse: collapse; margin-bottom: 20px }
     .uebersicht th, .uebersicht td { border: 1px solid #ccc; padding: 8px; text-align: center }
@@ -98,6 +107,10 @@
         <span class="kategorie grau">Sonstiges</span>
       </div>
 
+      <div class="soll-info">
+        Notwendige Sollpunkte: <span id="sollInfo" class="value">–</span>
+      </div>
+
       <h2>Elternübersicht</h2>
       <table class="uebersicht">
         <thead>
@@ -149,7 +162,10 @@
           <input id="einsatzStunden" placeholder="Punkte" type="number">
           <input id="einsatzHelferanzahl" placeholder="Helferanzahl" type="number">
         </div>
-        <button class="btn-primary" onclick="addEinsatz()">Einsatz erstellen</button>
+        <div class="admin-actions">
+          <button class="btn-primary" onclick="addEinsatz()">Einsatz erstellen</button>
+          <button class="btn-danger" onclick="openClearAllModal()">Alle Einträge löschen</button>
+        </div>
         
         <h3>Vorhandene Einsätze</h3>
         <div id="adminEinsaetze"></div>
@@ -207,6 +223,21 @@
       <div class="modal-actions">
         <button class="btn-primary" onclick="druckeInfo()">Anleitung drucken</button>
         <button class="btn-danger" onclick="closeInfoModal()">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Alle Einträge löschen -->
+  <div id="clearAllModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Alle Eintragungen löschen</div>
+        <button class="modal-close" onclick="closeClearAllModal()">×</button>
+      </div>
+      <p>Willst du wirklich alle Eintragungen löschen?!? Nach deiner Bestätigung kann die Löschung nicht rückgängig gemacht werden.</p>
+      <div class="modal-actions">
+        <button class="btn-danger" onclick="confirmClearAll()">Ja löschen</button>
+        <button class="btn-primary" onclick="closeClearAllModal()">Abbrechen</button>
       </div>
     </div>
   </div>
@@ -288,17 +319,23 @@
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`); return r.json(); })
         .then(json => {
           const arr = (json.data || []).slice();
-          arr.forEach(e => { e.datum = toDEDateString(e.datum); });     // Normalisieren
-          arr.sort((a, b) => parseDE(a.datum) - parseDE(b.datum));      // Sortieren
+          arr.forEach(e => { e.datum = toDEDateString(e.datum); });
+          arr.sort((a, b) => parseDE(a.datum) - parseDE(b.datum));
           globaleDaten = arr;
           globaleSollPunkte = json.sollPunkte || 10;
 
+          updateSollInfo();
           zeigeElternUebersicht();
           zeigeEigeneEinsaetze();
           zeigeEinsaetzeFuerEltern();
           zeigeAdminEinsaetze();
         })
         .catch(err => console.error('Ladefehler:', err));
+    }
+
+    function updateSollInfo() {
+      const el = document.getElementById('sollInfo');
+      if (el) el.textContent = String(globaleSollPunkte);
     }
 
     // Auto-Refresh alle 15 s aber nur wenn nichts editiert wird
@@ -308,7 +345,8 @@
       const isEditing = active && (active.matches('input, textarea, select') || active.isContentEditable);
       const editOpen = document.getElementById('editModal').style.display === 'flex';
       const infoOpen = document.getElementById('infoModal').style.display === 'flex';
-      return !isEditing && !editOpen && !infoOpen;
+      const clearOpen = document.getElementById('clearAllModal').style.display === 'flex';
+      return !isEditing && !editOpen && !infoOpen && !clearOpen;
     }
     function startAutoRefresh() { setInterval(() => { if (canAutoRefresh()) ladeEinsaetze(); }, AUTO_REFRESH_MS); }
     document.addEventListener('visibilitychange', () => { if (!document.hidden && canAutoRefresh()) ladeEinsaetze(); });
@@ -570,7 +608,7 @@
         .then(result => {
           if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
           closeEditModal();
-          return ladeEinsaetze(); // sofort neu laden und sortieren
+          return ladeEinsaetze();
         })
         .catch(err => { alert('Fehler beim Aktualisieren: ' + err.message); })
         .finally(() => { isBusyNetwork = false; });
@@ -611,7 +649,7 @@
           document.getElementById('einsatzVerantwortlich').value = '';
           document.getElementById('einsatzStunden').value = '';
           document.getElementById('einsatzHelferanzahl').value = '';
-          return ladeEinsaetze(); // sofort neu laden und sortieren
+          return ladeEinsaetze();
         })
         .catch(err => { alert('Fehler: ' + err.message); })
         .finally(() => { isBusyNetwork = false; });
@@ -624,7 +662,31 @@
         .then(r => r.json())
         .then(result => {
           if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
-          return ladeEinsaetze(); // sofort neu laden und sortieren
+          return ladeEinsaetze();
+        })
+        .catch(err => { alert('Fehler: ' + err.message); })
+        .finally(() => { isBusyNetwork = false; });
+    }
+
+    // === Alle Einträge löschen ===
+    function openClearAllModal() {
+      const m = document.getElementById('clearAllModal');
+      m.style.display = 'flex';
+      m.setAttribute('aria-hidden', 'false');
+    }
+    function closeClearAllModal() {
+      const m = document.getElementById('clearAllModal');
+      m.style.display = 'none';
+      m.setAttribute('aria-hidden', 'true');
+    }
+    function confirmClearAll() {
+      isBusyNetwork = true;
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'removeAllHelfer', adminPassword: ADMIN_PASS }) })
+        .then(r => r.json())
+        .then(result => {
+          if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
+          closeClearAllModal();
+          return ladeEinsaetze();
         })
         .catch(err => { alert('Fehler: ' + err.message); })
         .finally(() => { isBusyNetwork = false; });
