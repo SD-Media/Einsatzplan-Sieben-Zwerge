@@ -19,91 +19,28 @@
       border-radius: 12px; 
       box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
     }
-    .tabs { 
-      display: flex; 
-      gap: 10px; 
-      margin-bottom: 20px; 
-    }
-    .nav-tab { 
-      background: #ddd; 
-      padding: 10px 20px; 
-      border-radius: 8px 8px 0 0; 
-      cursor: pointer; 
-      font-weight: bold; 
-      border: none; 
-    }
-    .nav-tab.active { 
-      background: #fff; 
-      border-bottom: 2px solid #fff; 
-    }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .nav-tab { background: #ddd; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; border: none; }
+    .nav-tab.active { background: #fff; border-bottom: 2px solid #fff; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .kategorien { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 10px; 
-      margin-bottom: 20px; 
-    }
-    .kategorie { 
-      padding: 6px 12px; 
-      border-radius: 20px; 
-      color: white; 
-      font-weight: bold; 
-    }
-    .gruen { background: #4caf50; }
-    .orange { background: #ff9800; }
-    .lila { background: #9c27b0; }
-    .blau { background: #2196f3; }
-    .grau { background: #607d8b; }
-    .uebersicht { 
-      width: 100%; 
-      border-collapse: collapse; 
-      margin-bottom: 20px; 
-    }
-    .uebersicht th, .uebersicht td { 
-      border: 1px solid #ccc; 
-      padding: 8px; 
-      text-align: center; 
-    }
-    .uebersicht th { 
-      background: #2196f3; 
-      color: white; 
-    }
+
+    .kategorien { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .kategorie { padding: 6px 12px; border-radius: 20px; color: white; font-weight: bold; }
+    .gruen { background: #4caf50; } .orange { background: #ff9800; } .lila { background: #9c27b0; } .blau { background: #2196f3; } .grau { background: #607d8b; }
+
+    .uebersicht { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .uebersicht th, .uebersicht td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    .uebersicht th { background: #2196f3; color: white; }
     .diff-positive { color: green; font-weight: bold; }
     .diff-negative { color: red; font-weight: bold; }
-    input, select, button { 
-      width: 100%; 
-      margin-bottom: 10px; 
-      padding: 10px; 
-      font-size: 1rem; 
-      box-sizing: border-box; 
-      border: 1px solid #ccc; 
-      border-radius: 5px; 
-    }
-    button.btn-primary { 
-      background: #2196f3; 
-      color: white; 
-      border: none; 
-      border-radius: 5px; 
-      cursor: pointer; 
-      font-weight: bold; 
-    }
-    button.btn-danger { 
-      background: #f44336; 
-      color: white; 
-      border: none; 
-      border-radius: 5px; 
-      cursor: pointer; 
-      font-weight: bold; 
-    }
+
+    input, select, button { width: 100%; margin-bottom: 10px; padding: 10px; font-size: 1rem; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; }
+    button.btn-primary { background: #2196f3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    button.btn-danger  { background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
     button:hover { opacity: 0.9; }
-    .einsatz-box { 
-      border-left: 10px solid #ccc; 
-      background: #f9f9f9; 
-      padding: 15px; 
-      margin-bottom: 15px; 
-      border-radius: 8px; 
-    }
+
+    .einsatz-box { border-left: 10px solid #ccc; background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
     .einsatz-gartenarbeit { border-left-color: #4caf50; }
     .einsatz-verkaufsaktion { border-left-color: #ff9800; }
     .einsatz-feste { border-left-color: #9c27b0; }
@@ -111,37 +48,26 @@
     .einsatz-sonstiges { border-left-color: #607d8b; }
 
     /* kompaktere Anzeige der Einsatzdaten */
-    .einsatz-info {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      align-items: center;
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
-    .einsatz-info > div {
-      white-space: nowrap;
-    }
+    .einsatz-info { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 10px; line-height: 1.4; }
+    .einsatz-info > div { white-space: nowrap; }
 
-    .helfer-input { 
-      display: inline-block; 
-      margin: 5px; 
-      padding: 6px 10px; 
-      border: 2px solid #f44336; 
-      border-radius: 5px; 
-      min-width: 150px; 
-      font-size: 1rem;
-      width: auto;
-    }
-    .helfer-input.filled { 
-      background: #e0f7fa; 
-      border-color: #4caf50; 
-    }
+    .helfer-input { display: inline-block; margin: 5px; padding: 6px 10px; border: 2px solid #f44336; border-radius: 5px; min-width: 150px; font-size: 1rem; width: auto; }
+    .helfer-input.filled { background: #e0f7fa; border-color: #4caf50; }
     .helfer-input:disabled { background: #f0f0f0; color: #666; }
     .helfer-section { margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px; }
     .helfer-section h4 { margin: 0 0 10px 0; color: #555; }
+
     .name-input-section { max-width: 420px; margin-bottom: 20px; }
     #nameInput { max-width: 300px; }
+
+    /* Admin Login Row */
+    .admin-login-row { display: flex; align-items: center; gap: 10px; max-width: 420px; }
+    .admin-login-row input[type="password"], .admin-login-row input[type="text"] { width: 220px; padding: 8px; }
+    .toggle-wrap { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+    /* Admin Edit Form */
+    .admin-edit-grid { display: grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap: 8px; }
+    .admin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .status-info { font-size: 0.9em; color: #666; margin-top: 10px; }
   </style>
 </head>
@@ -190,24 +116,31 @@
 
     <div id="adminTab" class="tab-content">
       <h2>Admin-Anmeldung</h2>
-      <input id="adminPasswort" type="password" placeholder="Admin Passwort">
-      <button class="btn-primary" onclick="loginAdmin()">Anmelden</button>
+      <div class="admin-login-row">
+        <input id="adminPasswort" type="password" placeholder="Admin Passwort">
+        <div class="toggle-wrap">
+          <input id="showPass" type="checkbox" onclick="togglePass()"> <label for="showPass">anzeigen</label>
+        </div>
+        <button class="btn-primary" style="width:auto;padding:8px 14px" onclick="loginAdmin()">Anmelden</button>
+      </div>
       
       <div id="adminArea" style="display:none">
         <h2>Neuen Einsatz erstellen</h2>
-        <input id="einsatzTitel" placeholder="Einsatzname">
-        <input id="einsatzDatum" placeholder="Datum (TT.MM.JJJJ)">
-        <input id="einsatzUhrzeit" placeholder="Uhrzeit">
-        <input id="einsatzVerantwortlich" placeholder="Verantwortlicher">
-        <select id="einsatzKategorie">
-          <option value="Gartenarbeit">Gartenarbeit</option>
-          <option value="Verkaufsaktion">Verkaufsaktion</option>
-          <option value="Feste">Feste</option>
-          <option value="Kindergartenpflege">Kindergartenpflege</option>
-          <option value="Sonstiges">Sonstiges</option>
-        </select>
-        <input id="einsatzStunden" placeholder="Punkte" type="number">
-        <input id="einsatzHelferanzahl" placeholder="Helferanzahl" type="number">
+        <div class="admin-edit-grid" style="margin-bottom:10px">
+          <input id="einsatzTitel" placeholder="Einsatzname">
+          <input id="einsatzDatum" placeholder="Datum (TT.MM.JJJJ)">
+          <input id="einsatzUhrzeit" placeholder="Uhrzeit">
+          <input id="einsatzVerantwortlich" placeholder="Verantwortlicher">
+          <select id="einsatzKategorie">
+            <option value="Gartenarbeit">Gartenarbeit</option>
+            <option value="Verkaufsaktion">Verkaufsaktion</option>
+            <option value="Feste">Feste</option>
+            <option value="Kindergartenpflege">Kindergartenpflege</option>
+            <option value="Sonstiges">Sonstiges</option>
+          </select>
+          <input id="einsatzStunden" placeholder="Punkte" type="number">
+          <input id="einsatzHelferanzahl" placeholder="Helferanzahl" type="number">
+        </div>
         <button class="btn-primary" onclick="addEinsatz()">Einsatz erstellen</button>
         
         <h3>Verwaltungsaktionen</h3>
@@ -231,6 +164,22 @@
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
       event.target.classList.add('active');
     }
+
+    // Passwort anzeigen/verdecken
+    function togglePass() {
+      const inp = document.getElementById('adminPasswort');
+      inp.type = (inp.type === 'password') ? 'text' : 'password';
+      inp.focus();
+    }
+
+    // Enter zum Anmelden
+    document.addEventListener('keydown', (e) => {
+      const active = document.activeElement;
+      if (active && active.id === 'adminPasswort' && e.key === 'Enter') {
+        e.preventDefault();
+        loginAdmin();
+      }
+    });
 
     function loginAdmin() {
       const passwortInput = document.getElementById('adminPasswort');
@@ -268,7 +217,7 @@
       if (!k) return 'einsatz-sonstiges';
       const s = k.toString().trim().toLowerCase();
       if (s.startsWith('garten')) return 'einsatz-gartenarbeit';
-      if (s.startsWith('verkaufs')) return 'einsatz-verkaufsaktion'; // „Verkaufsaktion“ oder „Verkaufsaktionen“
+      if (s.startsWith('verkaufs')) return 'einsatz-verkaufsaktion';
       if (s.startsWith('fest')) return 'einsatz-feste';
       if (s.includes('kindergarten')) return 'einsatz-kindergartenpflege';
       return 'einsatz-sonstiges';
@@ -400,6 +349,7 @@
         return;
       }
 
+      // einzelne Einsätze ohne Punkte und ohne Kategorie
       eigeneEinsaetze.forEach(einsatz => {
         const div = document.createElement('div');
         div.className = `einsatz-box ${katClassName(einsatz.kategorie)}`;
@@ -408,12 +358,12 @@
             <div><strong>${einsatz.name}</strong></div>
             <div>${einsatz.datum || 'Nicht angegeben'} – ${einsatz.uhrzeit || 'Nicht angegeben'}</div>
             <div>Verantwortlich: ${einsatz.verantwortlich || 'Nicht angegeben'}</div>
-            <div>Kategorie: ${einsatz.kategorie || 'Nicht angegeben'}</div>
           </div>
         `;
         eigeneEinsaetzeDiv.appendChild(div);
       });
 
+      // Zusammenfassung (Punktestand bleibt, weil hilfreich)
       const differenz = gesamtPunkte - globaleSollPunkte;
       const summaryDiv = document.createElement('div');
       summaryDiv.className = 'einsatz-box';
@@ -466,13 +416,84 @@
       globaleDaten.forEach(einsatz => {
         const div = document.createElement('div');
         div.className = 'einsatz-box';
+        div.id = `admin-einsatz-${einsatz.ID}`;
+
         div.innerHTML = `
-          <strong>${einsatz.name}</strong> — ${einsatz.datum} — ${einsatz.uhrzeit}<br>
-          <small>Kategorie: ${einsatz.kategorie}, Punkte: ${einsatz.Punkte}, Helfer: ${zaehleHelfer(einsatz)}/${einsatz.helferanzahl}</small><br>
-          <button class="btn-danger" onclick="deleteEinsatz('${einsatz.ID}')" style="width:auto; margin-top:5px;">Löschen</button>
+          <div class="einsatz-info" style="margin-bottom:6px">
+            <div><strong>${einsatz.name}</strong></div>
+            <div>${einsatz.datum} – ${einsatz.uhrzeit}</div>
+            <div>Kategorie: ${einsatz.kategorie}</div>
+            <div>Punkte: ${einsatz.Punkte}</div>
+            <div>Helfer: ${zaehleHelfer(einsatz)}/${einsatz.helferanzahl}</div>
+          </div>
+          <div class="admin-actions">
+            <button class="btn-primary" style="width:auto" onclick="startEditEinsatz('${einsatz.ID}')">Bearbeiten</button>
+            <button class="btn-danger"  style="width:auto" onclick="deleteEinsatz('${einsatz.ID}')">Löschen</button>
+          </div>
         `;
         adminEinsaetzeDiv.appendChild(div);
       });
+    }
+
+    // Bearbeiten starten
+    function startEditEinsatz(id) {
+      const box = document.getElementById(`admin-einsatz-${id}`);
+      const einsatz = globaleDaten.find(e => String(e.ID) === String(id));
+      if (!einsatz) return;
+
+      box.innerHTML = `
+        <div class="admin-edit-grid" style="margin-bottom:8px">
+          <input id="edit-name-${id}" value="${einsatz.name || ''}" placeholder="Einsatzname">
+          <input id="edit-datum-${id}" value="${einsatz.datum || ''}" placeholder="Datum (TT.MM.JJJJ)">
+          <input id="edit-uhrzeit-${id}" value="${einsatz.uhrzeit || ''}" placeholder="Uhrzeit">
+          <input id="edit-verant-${id}" value="${einsatz.verantwortlich || ''}" placeholder="Verantwortlicher">
+          <select id="edit-kat-${id}">
+            <option ${einsatz.kategorie==='Gartenarbeit'?'selected':''}>Gartenarbeit</option>
+            <option ${einsatz.kategorie?.toString().startsWith('Verkaufs')?'selected':''}>Verkaufsaktion</option>
+            <option ${einsatz.kategorie==='Feste'?'selected':''}>Feste</option>
+            <option ${einsatz.kategorie?.toString().includes('Kindergarten')?'selected':''}>Kindergartenpflege</option>
+            <option ${(!einsatz.kategorie || ['Gartenarbeit','Feste'].indexOf(einsatz.kategorie)>=0 || einsatz.kategorie.toString().startsWith('Verkaufs') || einsatz.kategorie.toString().includes('Kindergarten'))?'':'selected'}>Sonstiges</option>
+          </select>
+          <input id="edit-punkte-${id}" type="number" value="${Number(einsatz.Punkte)||0}" placeholder="Punkte">
+          <input id="edit-anz-${id}" type="number" value="${Number(einsatz.helferanzahl)||0}" placeholder="Helferanzahl">
+        </div>
+        <div class="admin-actions">
+          <button class="btn-primary" style="width:auto" onclick="saveEditEinsatz('${id}')">Speichern</button>
+          <button class="btn-danger"  style="width:auto" onclick="cancelEditEinsatz('${id}')">Abbrechen</button>
+        </div>
+      `;
+    }
+
+    function saveEditEinsatz(id) {
+      const payload = {
+        action: 'updateEinsatz',
+        adminPassword: ADMIN_PASS,
+        id: String(id),
+        name: document.getElementById(`edit-name-${id}`).value,
+        datum: document.getElementById(`edit-datum-${id}`).value,
+        uhrzeit: document.getElementById(`edit-uhrzeit-${id}`).value,
+        verantwortlich: document.getElementById(`edit-verant-${id}`).value,
+        kategorie: document.getElementById(`edit-kat-${id}`).value,
+        Punkte: Number(document.getElementById(`edit-punkte-${id}`).value),
+        helferanzahl: Number(document.getElementById(`edit-anz-${id}`).value)
+      };
+
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+        .then(r => r.json())
+        .then(result => {
+          if (result.success) {
+            alert('Einsatz aktualisiert');
+            ladeEinsaetze();
+          } else {
+            alert('Fehler beim Aktualisieren: ' + (result.message || 'Unbekannter Fehler'));
+          }
+        })
+        .catch(err => alert('Fehler beim Aktualisieren: ' + err.message));
+    }
+
+    function cancelEditEinsatz(id) {
+      // Einfach neu rendern
+      zeigeAdminEinsaetze();
     }
 
     function addEinsatz() {
