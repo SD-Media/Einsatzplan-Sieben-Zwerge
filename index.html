@@ -5,7 +5,7 @@
   <title>Arbeitseinsätze</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Cache-Busting: sorgt dafür, dass Browser & Proxies nichts cachen -->
+  <!-- Cache härter brechen -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -58,7 +58,7 @@
     .einsatz-info { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 10px; line-height: 1.4; word-break: break-word }
     .einsatz-info > div { white-space: nowrap } /* Desktop kompakt */
 
-    /* Mobile: Umbruch erzwingen damit Beschriftungen nicht rauslaufen */
+    /* Mobile: Umbruch damit lange Ansprechpartner nicht rauslaufen */
     @media (max-width: 640px) {
       .einsatz-info { align-items: flex-start }
       .einsatz-info > div { white-space: normal; flex: 1 1 100% }
@@ -166,7 +166,6 @@
           <input id="einsatzTitel" placeholder="Einsatzname">
           <input id="einsatzDatum" placeholder="Datum (TT.MM.JJJJ)">
           <input id="einsatzUhrzeit" placeholder="Uhrzeit">
-          <!-- ID bleibt gleich, nur Platzhalter-Text geändert -->
           <input id="einsatzVerantwortlich" placeholder="Ansprechpartner">
           <select id="einsatzKategorie">
             <option value="Gartenarbeit">Gartenarbeit</option>
@@ -228,7 +227,7 @@
       <div id="infoContent">
         <p><strong>Wichtiger Hinweis:</strong> Das Laden und Speichern kann ein paar Sekunden dauern da die Daten direkt in eine Excel-Tabelle übertragen werden. Nach kurzer Zeit sind deine Änderungen gespeichert und auch in der Elternübersicht sichtbar.</p>
         <ul>
-          <li>Hier findest du alle anstehenden Arbeitseinsätze mit Datum Uhrzeit Ansprechpartner und der Anzahl der benötigten Helfer</li>
+          <li>Hier findest du alle anstehenden Arbeitseinsätze mit Datum Uhrzeit Ansprechpartnern und der Anzahl der benötigten Helfer</li>
           <li>Trage dich als Helfer ein indem du in ein freies Feld klickst und deinen Namen einträgst</li>
           <li>Die Anzeige „x / y Helfer“ zeigt wie viele Plätze schon belegt sind und wie viele noch frei sind</li>
           <li>Türkis markierte Felder sind bereits ausgefüllt leere Felder sind frei</li>
@@ -260,15 +259,15 @@
 
   <script>
     // === Konfiguration ===
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxe59aQThQZtSQnptrMOSRUYtcV4VC43dWXvns2EuBwa4xaYIZt817wLO4Lt8c5L_BxRA/exec?v=ap-1';
     const ADMIN_PASS = 'SiebenZwerge';
     const AUTO_REFRESH_MS = 15000;
-    const BUILD_VERSION = 'v2-ansprechpartner'; // bei Änderungen erhöhen
 
     // === State ===
     let globaleDaten = [];
     let globaleSollPunkte = 10;
     let isBusyNetwork = false;
+    let editContext = { id: null };
 
     // === Tabs ===
     function showTab(id, event) {
@@ -332,7 +331,7 @@
 
     // === Daten laden (Datum normalisieren + sortieren) ===
     function ladeEinsaetze() {
-      return fetch(`${SCRIPT_URL}?v=${BUILD_VERSION}`)
+      return fetch(SCRIPT_URL)
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`); return r.json(); })
         .then(json => {
           const arr = (json.data || []).slice();
@@ -576,6 +575,7 @@
             <div>${einsatz.datum} – ${einsatz.uhrzeit}</div>
             <div>Kategorie: ${einsatz.kategorie}</div>
             <div>Punkte: ${einsatz.Punkte}</div>
+            <div>Ansprechpartner: ${einsatz.verantwortlich || 'Nicht angegeben'}</div>
             <div>Helfer: ${zaehleHelfer(einsatz)}/${einsatz.helferanzahl}</div>
           </div>
           <div class="admin-actions">
@@ -588,7 +588,6 @@
     }
 
     // === Edit-Modal ===
-    let editContext = { id: null };
     function startEditEinsatz(id) {
       const e = globaleDaten.find(x => String(x.ID) === String(id));
       if (!e) return;
