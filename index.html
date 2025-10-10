@@ -4,10 +4,17 @@
   <meta charset="UTF-8">
   <title>Arbeitseinsätze</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Cache-Busting: sorgt dafür, dass Browser & Proxies nichts cachen -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <style>
     body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 0; background: #f0f4f8; color: #333 }
     .container { max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1) }
 
+    /* TABS: volle Breite, zentriert, gleich breit */
     .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: nowrap; width: 100%; justify-content: center }
     .nav-tab { flex: 1 1 0; text-align: center; background: #ddd; padding: 12px 16px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600; border: none }
     .nav-tab.active { background: #fff; border-bottom: 2px solid #fff }
@@ -49,8 +56,9 @@
     .einsatz-sonstiges { border-left-color: #607d8b }
 
     .einsatz-info { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 10px; line-height: 1.4; word-break: break-word }
-    .einsatz-info > div { white-space: nowrap }
+    .einsatz-info > div { white-space: nowrap } /* Desktop kompakt */
 
+    /* Mobile: Umbruch erzwingen damit Beschriftungen nicht rauslaufen */
     @media (max-width: 640px) {
       .einsatz-info { align-items: flex-start }
       .einsatz-info > div { white-space: normal; flex: 1 1 100% }
@@ -158,6 +166,7 @@
           <input id="einsatzTitel" placeholder="Einsatzname">
           <input id="einsatzDatum" placeholder="Datum (TT.MM.JJJJ)">
           <input id="einsatzUhrzeit" placeholder="Uhrzeit">
+          <!-- ID bleibt gleich, nur Platzhalter-Text geändert -->
           <input id="einsatzVerantwortlich" placeholder="Ansprechpartner">
           <select id="einsatzKategorie">
             <option value="Gartenarbeit">Gartenarbeit</option>
@@ -219,7 +228,7 @@
       <div id="infoContent">
         <p><strong>Wichtiger Hinweis:</strong> Das Laden und Speichern kann ein paar Sekunden dauern da die Daten direkt in eine Excel-Tabelle übertragen werden. Nach kurzer Zeit sind deine Änderungen gespeichert und auch in der Elternübersicht sichtbar.</p>
         <ul>
-          <li>Hier findest du alle anstehenden Arbeitseinsätze mit Datum Uhrzeit Ansprechpartnern und der Anzahl der benötigten Helfer</li>
+          <li>Hier findest du alle anstehenden Arbeitseinsätze mit Datum Uhrzeit Ansprechpartner und der Anzahl der benötigten Helfer</li>
           <li>Trage dich als Helfer ein indem du in ein freies Feld klickst und deinen Namen einträgst</li>
           <li>Die Anzeige „x / y Helfer“ zeigt wie viele Plätze schon belegt sind und wie viele noch frei sind</li>
           <li>Türkis markierte Felder sind bereits ausgefüllt leere Felder sind frei</li>
@@ -250,14 +259,18 @@
   </div>
 
   <script>
+    // === Konfiguration ===
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ1P23tsbN5zX-BmqG8eNCg0GhxcTdBhxrogBAZYjheiTZGXPuvOo3PhVEx8SVjCAhqQ/exec';
     const ADMIN_PASS = 'SiebenZwerge';
     const AUTO_REFRESH_MS = 15000;
+    const BUILD_VERSION = 'v2-ansprechpartner'; // bei Änderungen erhöhen
 
+    // === State ===
     let globaleDaten = [];
     let globaleSollPunkte = 10;
     let isBusyNetwork = false;
 
+    // === Tabs ===
     function showTab(id, event) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById(id).classList.add('active');
@@ -265,6 +278,7 @@
       event.target.classList.add('active');
     }
 
+    // === Admin Login ===
     function togglePass() {
       const inp = document.getElementById('adminPasswort');
       inp.type = (inp.type === 'password') ? 'text' : 'password';
@@ -284,6 +298,7 @@
       alert('Erfolgreich als Admin angemeldet!');
     }
 
+    // === Datum-Helper ===
     function toDEDateString(val) {
       if (val instanceof Date && !isNaN(val)) {
         const dd = String(val.getDate()).padStart(2, '0');
@@ -315,8 +330,9 @@
       return 'einsatz-sonstiges';
     }
 
+    // === Daten laden (Datum normalisieren + sortieren) ===
     function ladeEinsaetze() {
-      return fetch(SCRIPT_URL)
+      return fetch(`${SCRIPT_URL}?v=${BUILD_VERSION}`)
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`); return r.json(); })
         .then(json => {
           const arr = (json.data || []).slice();
@@ -339,6 +355,20 @@
       if (el) el.textContent = String(globaleSollPunkte);
     }
 
+    // Auto-Refresh alle 15 s aber nur wenn nichts editiert wird
+    function canAutoRefresh() {
+      if (isBusyNetwork) return false;
+      const active = document.activeElement;
+      const isEditing = active && (active.matches('input, textarea, select') || active.isContentEditable);
+      const editOpen = document.getElementById('editModal').style.display === 'flex';
+      const infoOpen = document.getElementById('infoModal').style.display === 'flex';
+      const clearOpen = document.getElementById('clearAllModal').style.display === 'flex';
+      return !isEditing && !editOpen && !infoOpen && !clearOpen;
+    }
+    function startAutoRefresh() { setInterval(() => { if (canAutoRefresh()) ladeEinsaetze(); }, AUTO_REFRESH_MS); }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && canAutoRefresh()) ladeEinsaetze(); });
+
+    // === Elternübersicht ===
     function zeigeElternUebersicht() {
       const eltern = {};
       globaleDaten.forEach(einsatz => {
@@ -365,6 +395,7 @@
       });
     }
 
+    // === Einsätze Liste (Elternbereich) ===
     function zeigeEinsaetzeFuerEltern() {
       const einsatzListe = document.getElementById('einsatzListe');
       einsatzListe.innerHTML = '';
@@ -406,6 +437,7 @@
             input.placeholder = `Helfer ${i + 1}`;
             if (currentHelfer) input.classList.add('filled');
 
+            // Optimistic UI + sofort neu laden nach Erfolg
             input.addEventListener('change', function () {
               const newName = this.value.trim();
               einsatz[helferKey] = newName;
@@ -431,6 +463,7 @@
       });
     }
 
+    // === Meine Einsätze ===
     function zeigeEigeneEinsaetze() {
       const eigeneEinsaetzeDiv = document.getElementById('eigeneEinsaetze');
       const name = document.getElementById('nameInput').value.trim();
@@ -477,14 +510,239 @@
       eigeneEinsaetzeDiv.appendChild(summaryDiv);
     }
 
+    function druckeEigeneEinsaetze() {
+      const name = document.getElementById('nameInput').value.trim();
+      const wrap = document.getElementById('eigeneEinsaetze');
+      const inhalt = wrap.innerHTML;
+      if (!inhalt.trim()) { alert('Keine Einsätze zum Drucken vorhanden.'); return; }
+      const heute = new Date();
+      const datum = heute.toLocaleDateString('de-DE');
+      const zeit = heute.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+      const w = window.open('', '', 'height=900,width=800');
+      w.document.write(`
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Meine Einsätze</title>
+            <style>
+              body { font-family: 'Segoe UI', sans-serif; color: #000; margin: 40px }
+              header { display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px }
+              .brand { font-size: 20px; font-weight: 700 }
+              .meta { font-size: 12px; color: #333; text-align: right }
+              h2 { margin: 0 0 10px 0 }
+              .einsatz-box { border-left: 6px solid #000; background:#fff; padding:12px; margin: 8px 0; border-radius: 6px; box-shadow: 0 1px 0 rgba(0,0,0,0.04) }
+              .einsatz-info { display:flex; flex-wrap:wrap; gap:12px; align-items:center }
+              .einsatz-info > div { white-space:nowrap }
+              footer { margin-top: 24px; font-size: 11px; color: #444 }
+              @page { margin: 20mm }
+            </style>
+          </head>
+          <body>
+            <header>
+              <div class="brand">Waldorfkindergarten Sieben Zwerge – Einsätze</div>
+              <div class="meta">
+                <div><strong>Name:</strong> ${name || '-'}</div>
+                <div>${datum} ${zeit}</div>
+              </div>
+            </header>
+            <main>
+              <h2>Meine Einsätze</h2>
+              ${inhalt}
+            </main>
+            <footer>Diese Übersicht wurde automatisch erzeugt</footer>
+          </body>
+        </html>
+      `);
+      w.document.close();
+      w.focus();
+      w.print();
+    }
+
+    // === Adminliste ===
+    function zeigeAdminEinsaetze() {
+      const adminEinsaetzeDiv = document.getElementById('adminEinsaetze');
+      if (!document.getElementById('adminArea').style.display || document.getElementById('adminArea').style.display === 'none') return;
+
+      adminEinsaetzeDiv.innerHTML = '';
+      globaleDaten.forEach(einsatz => {
+        const div = document.createElement('div');
+        const kategorieClass = katClassName(einsatz.kategorie);
+        div.className = `einsatz-box ${kategorieClass}`;
+        div.id = `admin-einsatz-${einsatz.ID}`;
+        div.innerHTML = `
+          <div class="einsatz-info" style="margin-bottom:6px">
+            <div><strong>${einsatz.name}</strong></div>
+            <div>${einsatz.datum} – ${einsatz.uhrzeit}</div>
+            <div>Kategorie: ${einsatz.kategorie}</div>
+            <div>Punkte: ${einsatz.Punkte}</div>
+            <div>Helfer: ${zaehleHelfer(einsatz)}/${einsatz.helferanzahl}</div>
+          </div>
+          <div class="admin-actions">
+            <button class="btn-primary" onclick="startEditEinsatz('${einsatz.ID}')">Bearbeiten</button>
+            <button class="btn-danger"  onclick="deleteEinsatz('${einsatz.ID}')">Löschen</button>
+          </div>
+        `;
+        adminEinsaetzeDiv.appendChild(div);
+      });
+    }
+
+    // === Edit-Modal ===
+    let editContext = { id: null };
+    function startEditEinsatz(id) {
+      const e = globaleDaten.find(x => String(x.ID) === String(id));
+      if (!e) return;
+      editContext.id = String(id);
+      document.getElementById('edit-name').value = e.name || '';
+      document.getElementById('edit-datum').value = e.datum || '';
+      document.getElementById('edit-uhrzeit').value = e.uhrzeit || '';
+      document.getElementById('edit-verantwortlich').value = e.verantwortlich || '';
+      document.getElementById('edit-kategorie').value =
+        ['Gartenarbeit','Verkaufsaktion','Feste','Kindergartenpflege','Sonstiges'].includes(e.kategorie) ? e.kategorie : 'Sonstiges';
+      document.getElementById('edit-punkte').value = Number(e.Punkte) || 0;
+      document.getElementById('edit-anzahl').value = Number(e.helferanzahl) || 0;
+      openEditModal();
+    }
+    function openEditModal() { const m = document.getElementById('editModal'); m.style.display = 'flex'; m.setAttribute('aria-hidden', 'false'); }
+    function closeEditModal() { const m = document.getElementById('editModal'); m.style.display = 'none'; m.setAttribute('aria-hidden', 'true'); editContext.id = null; }
+    function saveEdit() {
+      if (!editContext.id) return;
+      const payload = {
+        action: 'updateEinsatz',
+        adminPassword: ADMIN_PASS,
+        id: editContext.id,
+        name: document.getElementById('edit-name').value,
+        datum: document.getElementById('edit-datum').value,
+        uhrzeit: document.getElementById('edit-uhrzeit').value,
+        verantwortlich: document.getElementById('edit-verantwortlich').value,
+        kategorie: document.getElementById('edit-kategorie').value,
+        Punkte: Number(document.getElementById('edit-punkte').value),
+        helferanzahl: Number(document.getElementById('edit-anzahl').value)
+      };
+      isBusyNetwork = true;
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+        .then(r => r.json())
+        .then(result => {
+          if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
+          closeEditModal();
+          return ladeEinsaetze();
+        })
+        .catch(err => { alert('Fehler beim Aktualisieren: ' + err.message); })
+        .finally(() => { isBusyNetwork = false; });
+    }
+
+    // === Helfer speichern ===
+    function setHelfer(einsatzId, helferIndex, name) {
+      const data = { action: 'setHelfer', id: String(einsatzId), index: helferIndex, name: name };
+      isBusyNetwork = true;
+      return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
+        .then(r => r.json())
+        .then(result => { if (!result.success) throw new Error(result.message || 'Unbekannter Fehler'); })
+        .catch(err => { alert('Fehler beim Speichern: ' + err.message); })
+        .finally(() => { isBusyNetwork = false; });
+    }
+
+    // === Admin: anlegen/löschen ===
+    function addEinsatz() {
+      const data = {
+        action: 'addEinsatz',
+        adminPassword: ADMIN_PASS,
+        name: document.getElementById('einsatzTitel').value,
+        datum: document.getElementById('einsatzDatum').value,
+        uhrzeit: document.getElementById('einsatzUhrzeit').value,
+        verantwortlich: document.getElementById('einsatzVerantwortlich').value,
+        kategorie: document.getElementById('einsatzKategorie').value,
+        punkte: Number(document.getElementById('einsatzStunden').value),
+        helferanzahl: Number(document.getElementById('einsatzHelferanzahl').value)
+      };
+      isBusyNetwork = true;
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
+        .then(r => r.json())
+        .then(result => {
+          if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
+          document.getElementById('einsatzTitel').value = '';
+          document.getElementById('einsatzDatum').value = '';
+          document.getElementById('einsatzUhrzeit').value = '';
+          document.getElementById('einsatzVerantwortlich').value = '';
+          document.getElementById('einsatzStunden').value = '';
+          document.getElementById('einsatzHelferanzahl').value = '';
+          return ladeEinsaetze();
+        })
+        .catch(err => { alert('Fehler: ' + err.message); })
+        .finally(() => { isBusyNetwork = false; });
+    }
+
+    function deleteEinsatz(id) {
+      if (!confirm('Einsatz wirklich löschen?')) return;
+      isBusyNetwork = true;
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteEinsatz', adminPassword: ADMIN_PASS, id: String(id) }) })
+        .then(r => r.json())
+        .then(result => {
+          if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
+          return ladeEinsaetze();
+        })
+        .catch(err => { alert('Fehler: ' + err.message); })
+        .finally(() => { isBusyNetwork = false; });
+    }
+
+    // === Alle Einträge löschen ===
+    function openClearAllModal() {
+      const m = document.getElementById('clearAllModal');
+      m.style.display = 'flex';
+      m.setAttribute('aria-hidden', 'false');
+    }
+    function closeClearAllModal() {
+      const m = document.getElementById('clearAllModal');
+      m.style.display = 'none';
+      m.setAttribute('aria-hidden', 'true');
+    }
+    function confirmClearAll() {
+      isBusyNetwork = true;
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'removeAllHelfer', adminPassword: ADMIN_PASS }) })
+        .then(r => r.json())
+        .then(result => {
+          if (!result.success) throw new Error(result.message || 'Unbekannter Fehler');
+          closeClearAllModal();
+          return ladeEinsaetze();
+        })
+        .catch(err => { alert('Fehler: ' + err.message); })
+        .finally(() => { isBusyNetwork = false; });
+    }
+
     function zaehleHelfer(einsatz) {
       let count = 0;
       for (let i = 1; i <= 10; i++) if (einsatz[`Helfer${i}`] && einsatz[`Helfer${i}`].trim()) count++;
       return count;
     }
 
+    // === Info-Modal ===
+    function openInfoModal() { const m = document.getElementById('infoModal'); m.style.display = 'flex'; m.setAttribute('aria-hidden', 'false'); }
+    function closeInfoModal() { const m = document.getElementById('infoModal'); m.style.display = 'none'; m.setAttribute('aria-hidden', 'true'); }
+    function druckeInfo() {
+      const content = document.getElementById('infoContent').innerHTML;
+      const w = window.open('', '', 'height=900,width=800');
+      w.document.write(`
+        <html><head><meta charset="UTF-8"><title>Anleitung</title>
+        <style>
+          body { font-family: 'Segoe UI', sans-serif; color: #000; margin: 40px }
+          h1 { font-size: 20px; margin: 0 0 10px 0 }
+          ul { margin: 6px 0 14px 18px }
+          li { margin: 4px 0 }
+          @page { margin: 18mm }
+        </style>
+        </head><body>
+          <h1>Anleitung für den Bereich „Einsätze“</h1>
+          ${content}
+        </body></html>
+      `);
+      w.document.close();
+      w.focus();
+      w.print();
+    }
+
+    // === Boot ===
     document.addEventListener('DOMContentLoaded', () => {
-      ladeEinsaetze().then(() => setInterval(() => { ladeEinsaetze(); }, AUTO_REFRESH_MS));
+      ladeEinsaetze().then(() => startAutoRefresh());
     });
   </script>
 </body>
